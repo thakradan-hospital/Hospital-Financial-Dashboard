@@ -1,0 +1,3950 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hospital Financial Dashboard</title>
+    <script src="/_sdk/data_sdk.js"></script>
+    <script src="/_sdk/element_sdk.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      body {
+        box-sizing: border-box;
+        font-family: "Prompt", sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+        min-height: 100%;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      .dashboard-container {
+        display: flex;
+        min-height: 100%;
+      }
+
+      .sidebar {
+        width: 340px;
+        background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border-right: 1px solid rgba(255, 255, 255, 0.18);
+        padding: 20px 0;
+        overflow-y: auto;
+        transition: transform 0.3s ease;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100%;
+      }
+
+      .logo {
+        text-align: center;
+        padding: 0 20px 30px;
+        border-bottom: 1px solid rgba(107, 114, 128, 0.2);
+        margin-bottom: 20px;
+      }
+
+      .logo h1 {
+        color: #ffffff;
+        font-size: 20px;
+        font-weight: 600;
+        margin: 0;
+      }
+
+      .logo p {
+        color: #ffffff;
+        font-size: 14px;
+        margin: 5px 0 0;
+      }
+
+      .menu-item {
+        margin: 0 15px 10px;
+      }
+
+      .menu-header {
+        padding: 12px 15px;
+        background: linear-gradient(135deg, #6b7280, #4b5563);
+        color: white;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .menu-header:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(107, 114, 128, 0.4);
+      }
+
+      .menu-header.active {
+        background: linear-gradient(135deg, #4b5563, #374151);
+      }
+
+      .submenu {
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 0 0 10px 10px;
+        margin-top: -5px;
+        padding: 10px 0;
+        display: none;
+        border: 1px solid rgba(107, 114, 128, 0.2);
+        border-top: none;
+      }
+
+      .submenu.active {
+        display: block;
+      }
+
+      .submenu-item {
+        padding: 8px 20px;
+        color: #4b5563;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 14px;
+      }
+
+      .submenu-item:hover {
+        background: rgba(107, 114, 128, 0.1);
+        color: #374151;
+        padding-left: 25px;
+      }
+
+      .submenu-item.active {
+        background: rgba(107, 114, 128, 0.15);
+        color: #374151;
+        font-weight: 500;
+      }
+
+      .arrow {
+        transition: transform 0.3s ease;
+      }
+
+      .arrow.rotated {
+        transform: rotate(180deg);
+      }
+
+      .main-content {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        margin-left: 340px;
+      }
+
+      .content-header {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        flex-shrink: 0;
+      }
+
+      #content-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+
+      .content-header h2 {
+        color: #374151;
+        margin: 0 0 10px;
+        font-size: 28px;
+        font-weight: 600;
+      }
+
+      .content-header p {
+        color: #6b7280;
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .chart-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+
+      .chart-container {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+      }
+
+      .chart-container h3 {
+        color: #374151;
+        margin: 0 0 20px;
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .chart-wrapper {
+        position: relative;
+        height: 300px;
+      }
+
+      .data-entry-form {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        margin-bottom: 20px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+
+      @media (max-width: 768px) {
+        .form-grid {
+          grid-template-columns: 1fr;
+          gap: 12px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .form-grid {
+          grid-template-columns: 1fr;
+          gap: 10px;
+        }
+
+        .form-group input,
+        .form-group select {
+          padding: 12px 14px;
+          font-size: 16px;
+          border-radius: 10px;
+        }
+
+        .form-group label {
+          font-size: 15px;
+          margin-bottom: 10px;
+        }
+
+        .data-entry-form {
+          padding: 20px 15px;
+          margin-bottom: 15px;
+        }
+
+        .data-entry-form h3 {
+          font-size: 20px;
+          margin-bottom: 20px;
+        }
+
+        .btn {
+          padding: 14px 20px;
+          font-size: 16px;
+          border-radius: 12px;
+          width: 100%;
+          margin-bottom: 10px;
+        }
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .form-group label {
+        color: #4b5563;
+        font-weight: 500;
+        margin-bottom: 8px;
+        font-size: 14px;
+      }
+
+      .form-group input,
+      .form-group select,
+      #department {
+        padding: 10px 12px;
+        border: 2px solid rgba(107, 114, 128, 0.2);
+        border-radius: 8px;
+        background: white;
+        color: #4b5563;
+        font-family: "Prompt", sans-serif;
+        font-size: 14px;
+        transition: border-color 0.3s ease;
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus,
+      #department:focus {
+        outline: none;
+        border-color: #6b7280;
+      }
+
+      .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-family: "Prompt", sans-serif;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        font-size: 14px;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #6b7280, #4b5563);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(107, 114, 128, 0.4);
+      }
+
+      .btn-primary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .data-table {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        overflow-x: auto;
+        margin-bottom: 20px;
+        display: flex;
+        flex-direction: column;
+        max-height: 70vh;
+      }
+
+      .data-table > div {
+        overflow-y: auto;
+        flex-shrink: 1;
+      }
+
+      .data-table h3 {
+        color: #374151;
+        margin: 0 0 20px;
+        font-size: 20px;
+        font-weight: 600;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      th {
+        background: linear-gradient(135deg, #6b7280, #4b5563);
+        color: white;
+        padding: 12px;
+        text-align: left;
+        font-weight: 500;
+      }
+
+      td {
+        padding: 12px;
+        border-bottom: 1px solid rgba(107, 114, 128, 0.1);
+        color: #4b5563;
+      }
+
+      tr:hover {
+        background: rgba(107, 114, 128, 0.05);
+      }
+
+      .delete-btn {
+        background: #ef4444;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-family: "Prompt", sans-serif;
+        font-size: 12px;
+        transition: all 0.2s ease;
+      }
+
+      .delete-btn:hover {
+        background: #dc2626;
+      }
+
+      .mobile-menu-toggle {
+        display: none;
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1000;
+        background: linear-gradient(135deg, #6b7280, #4b5563);
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 18px;
+      }
+
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 15px 20px;
+        border-radius: 10px;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border-left: 4px solid #6b7280;
+        z-index: 1000;
+        display: none;
+        animation: slideIn 0.3s ease-out;
+      }
+
+      .toast.show {
+        display: block;
+      }
+
+      .toast.error {
+        border-left-color: #ef4444;
+      }
+
+      .toast.success {
+        border-left-color: #10b981;
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      .chart-popup-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 10000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.2s ease-out;
+      }
+
+      .chart-popup-overlay.show {
+        display: flex;
+      }
+
+      .chart-popup {
+        background: white;
+        border-radius: 20px;
+        padding: 35px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        max-width: 500px;
+        width: 90%;
+        animation: popupSlideIn 0.3s ease-out;
+        position: relative;
+      }
+
+      .chart-popup h3 {
+        color: #374151;
+        margin: 0 0 20px;
+        font-size: 24px;
+        font-weight: 600;
+        text-align: center;
+      }
+
+      .chart-popup-content {
+        background: linear-gradient(
+          135deg,
+          rgba(107, 114, 128, 0.05),
+          rgba(75, 85, 99, 0.05)
+        );
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+
+      .chart-popup-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(107, 114, 128, 0.1);
+      }
+
+      .chart-popup-row:last-child {
+        border-bottom: none;
+      }
+
+      .chart-popup-label {
+        color: #6b7280;
+        font-weight: 500;
+        font-size: 15px;
+      }
+
+      .chart-popup-value {
+        color: #1f2937;
+        font-weight: 600;
+        font-size: 18px;
+      }
+
+      .chart-popup-close {
+        background: linear-gradient(135deg, #6b7280, #4b5563);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-family: "Prompt", sans-serif;
+        font-weight: 500;
+        font-size: 16px;
+        width: 100%;
+        transition: all 0.3s ease;
+      }
+
+      .chart-popup-close:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(107, 114, 128, 0.4);
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes popupSlideIn {
+        from {
+          transform: scale(0.8) translateY(-20px);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1) translateY(0);
+          opacity: 1;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .dashboard-container {
+          flex-direction: column;
+        }
+
+        .sidebar {
+          position: fixed;
+          left: 0;
+          top: 0;
+          height: 100%;
+          z-index: 999;
+          transform: translateX(-100%);
+        }
+
+        .sidebar.active {
+          transform: translateX(0);
+        }
+
+        .mobile-menu-toggle {
+          display: block;
+        }
+
+        .main-content {
+          padding: 70px 15px 15px;
+          margin-left: 0;
+        }
+
+        .chart-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+    <style>
+      @view-transition {
+        navigation: auto;
+      }
+    </style>
+    <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+  </head>
+  <body>
+    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+    <div class="dashboard-container">
+      <nav class="sidebar" id="sidebar">
+        <div class="logo">
+          <h1 id="hospital-name">โรงพยาบาลท่ากระดาน</h1>
+          <p id="dashboard-title">Dashboard วิเคราะห์รายได้</p>
+        </div>
+        <div class="menu-item">
+          <div
+            class="menu-header"
+            onclick="selectSubmenu(this, 'current-overview')"
+          >
+            <span>สถานการณ์การเงินปัจจุบัน</span>
+          </div>
+        </div>
+        <div class="menu-item">
+          <div class="menu-header" onclick="toggleMenu('yearly-summary')">
+            <span>สรุปสถานการณ์การเงินประจำปี</span>
+            <span class="arrow" id="yearly-summary-arrow">▼</span>
+          </div>
+          <div class="submenu" id="yearly-summary-menu">
+            <div
+              class="submenu-item"
+              onclick="selectSubmenu(this, 'yearly-overview')"
+            >
+              Overview
+            </div>
+            <div
+              class="submenu-item"
+              onclick="selectSubmenu(this, 'yearly-income')"
+            >
+              รายรับ
+            </div>
+            <div
+              class="submenu-item"
+              onclick="selectSubmenu(this, 'yearly-expenses')"
+            >
+              รายจ่าย
+            </div>
+          </div>
+        </div>
+        <div class="menu-item">
+          <div class="menu-header" onclick="toggleMenu('productivity')">
+            <span>Productivity</span>
+            <span class="arrow" id="productivity-arrow">▼</span>
+          </div>
+          <div class="submenu" id="productivity-menu">
+            <div class="submenu-item" onclick="selectSubmenu(this, 'dental')">
+              ทันตกรรม
+            </div>
+            <div
+              class="submenu-item"
+              onclick="selectSubmenu(this, 'thai-medicine')"
+            >
+              แผนไทย
+            </div>
+            <div
+              class="submenu-item"
+              onclick="selectSubmenu(this, 'physical-therapy')"
+            >
+              กายภาพ
+            </div>
+            <div
+              class="submenu-item"
+              onclick="selectSubmenu(this, 'rights-summary')"
+            >
+              สรุปรายได้แยกตามสิทธิ
+            </div>
+          </div>
+        </div>
+        <div class="menu-item">
+          <div class="menu-header" onclick="toggleMenu('productivity-other')">
+            <span>Productivity อื่นๆ</span>
+            <span class="arrow" id="productivity-other-arrow">▼</span>
+          </div>
+          <div class="submenu" id="productivity-other-menu">
+            <div class="submenu-item" onclick="selectSubmenu(this, 'opd')">
+              OPD
+            </div>
+            <div class="submenu-item" onclick="selectSubmenu(this, 'ipd')">
+              IPD
+            </div>
+            <div
+              class="submenu-item"
+              onclick="selectSubmenu(this, 'primary-care')"
+            >
+              ปฐมภูมิ
+            </div>
+            <div class="submenu-item" onclick="selectSubmenu(this, 'accident')">
+              พรบ.
+            </div>
+          </div>
+        </div>
+        <div class="menu-item">
+          <div class="menu-header" onclick="toggleMenu('data-entry')">
+            <span>บันทึกข้อมูล</span>
+            <span class="arrow" id="data-entry-arrow">▼</span>
+          </div>
+          <div class="submenu" id="data-entry-menu">
+            <div
+              class="submenu-item"
+              onclick="selectSubmenu(this, 'entry-form')"
+            >
+              บันทึกข้อมูลใหม่
+            </div>
+            <div
+              class="submenu-item"
+              onclick="selectSubmenu(this, 'view-data')"
+            >
+              ดูข้อมูลที่บันทึก
+            </div>
+          </div>
+        </div>
+      </nav>
+      <main class="main-content" id="main-content">
+        <div class="content-header">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              flex-wrap: wrap;
+              gap: 15px;
+            "
+          >
+            <div>
+              <h2 id="current-section">สถานการณ์การเงินปัจจุบัน</h2>
+              <p id="section-description">
+                ข้อมูลการวิเคราะห์และสรุปผลการดำเนินงาน
+              </p>
+            </div>
+            <div style="display: flex; gap: 15px; align-items: flex-end">
+              <div class="form-group" style="margin: 0; min-width: 150px">
+                <label for="year-filter" style="margin-bottom: 5px"
+                  >เลือกปี</label
+                >
+                <select
+                  id="year-filter"
+                  onchange="handleYearFilterChange()"
+                  style="
+                    padding: 8px 12px;
+                    border: 2px solid rgba(102, 126, 234, 0.2);
+                    border-radius: 8px;
+                    background: white;
+                    color: #4b5563;
+                    font-family: 'Prompt', sans-serif;
+                    font-size: 14px;
+                  "
+                >
+                  <option value="all">ทุกปี</option>
+                </select>
+              </div>
+              <div id="chart-type-toggle" style="display: none">
+                <label
+                  style="
+                    margin-bottom: 5px;
+                    display: block;
+                    color: #4b5563;
+                    font-weight: 500;
+                    font-size: 14px;
+                  "
+                  >ประเภทกราฟ</label
+                >
+                <button
+                  id="chart-type-btn"
+                  onclick="toggleChartType()"
+                  style="
+                    padding: 8px 16px;
+                    border: 2px solid #6b7280;
+                    border-radius: 8px;
+                    background: white;
+                    color: #4b5563;
+                    font-family: 'Prompt', sans-serif;
+                    font-size: 14px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    min-width: 120px;
+                  "
+                >
+                  📈 เส้น
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="content-area"></div>
+      </main>
+    </div>
+    <div class="toast" id="toast"></div>
+    <div
+      class="chart-popup-overlay"
+      id="chart-popup-overlay"
+      onclick="closeChartPopup(event)"
+    >
+      <div class="chart-popup" onclick="event.stopPropagation()">
+        <h3 id="popup-title">รายละเอียดข้อมูล</h3>
+        <div class="chart-popup-content" id="popup-content"></div>
+        <button class="chart-popup-close" onclick="closeChartPopup()">
+          ปิด
+        </button>
+      </div>
+    </div>
+    <script>
+      const defaultConfig = {
+        hospital_name: "โรงพยาบาลท่ากระดาน",
+        dashboard_title: "Dashboard วิเคราะห์รายได้",
+        primary_color: "#6b7280",
+        secondary_color: "#4b5563",
+        background_color: "#f8fafc",
+        text_color: "#1f2937",
+        accent_color: "#10b981",
+      };
+
+      let currentSection = "current-overview";
+      let allData = [];
+      let charts = {};
+      let selectedYear = "all";
+      let chartType = "line"; // 'line' or 'bar'
+
+      // Data SDK Handler
+      const dataHandler = {
+        onDataChanged(data) {
+          allData = data;
+          updateYearFilter();
+          renderCurrentSection();
+        },
+      };
+
+      // Update year filter dropdown with available years
+      function updateYearFilter() {
+        const years = [
+          ...new Set(allData.map((d) => d.year).filter((y) => y)),
+        ].sort((a, b) => b - a);
+        const yearFilter = document.getElementById("year-filter");
+
+        if (yearFilter) {
+          const currentValue = yearFilter.value;
+          yearFilter.innerHTML =
+            '<option value="all">ทุกปี</option>' +
+            years
+              .map((year) => `<option value="${year}">${year}</option>`)
+              .join("");
+
+          // Restore selected value if it still exists
+          if (years.includes(currentValue) || currentValue === "all") {
+            yearFilter.value = currentValue;
+          } else {
+            yearFilter.value = "all";
+            selectedYear = "all";
+          }
+        }
+      }
+
+      // Handle year filter change
+      function handleYearFilterChange() {
+        const yearFilter = document.getElementById("year-filter");
+        selectedYear = yearFilter.value;
+        updateChartTypeToggle();
+        renderCurrentSection();
+      }
+
+      // Update chart type toggle visibility
+      function updateChartTypeToggle() {
+        const toggle = document.getElementById("chart-type-toggle");
+        if (selectedYear === "all") {
+          toggle.style.display = "block";
+        } else {
+          toggle.style.display = "none";
+          chartType = "bar"; // Force bar chart for specific year
+        }
+      }
+
+      // Toggle chart type
+      function toggleChartType() {
+        if (selectedYear !== "all") return; // Only allow toggle when showing all years
+
+        chartType = chartType === "line" ? "bar" : "line";
+
+        const btn = document.getElementById("chart-type-btn");
+        if (chartType === "line") {
+          btn.innerHTML = "📈 เส้น";
+          btn.style.background = "white";
+          btn.style.color = "#4b5563";
+        } else {
+          btn.innerHTML = "📊 แท่ง";
+          btn.style.background = "#6b7280";
+          btn.style.color = "white";
+        }
+
+        renderCurrentSection();
+      }
+
+      // Get filtered data based on selected year
+      function getFilteredData() {
+        if (selectedYear === "all") {
+          return allData;
+        }
+        return allData.filter((d) => d.year === selectedYear);
+      }
+
+      // Initialize SDKs
+      async function initializeApp() {
+        try {
+          if (window.dataSdk) {
+            const dataResult = await window.dataSdk.init(dataHandler);
+            if (!dataResult.isOk) {
+              showToast("ไม่สามารถเชื่อมต่อระบบข้อมูลได้", "error");
+              console.error("Data SDK init error:", dataResult.error);
+            }
+          }
+
+          if (window.elementSdk) {
+            await window.elementSdk.init({
+              defaultConfig,
+              onConfigChange: async (config) => {
+                document.getElementById("hospital-name").textContent =
+                  config.hospital_name || defaultConfig.hospital_name;
+                document.getElementById("dashboard-title").textContent =
+                  config.dashboard_title || defaultConfig.dashboard_title;
+              },
+              mapToCapabilities: (config) => ({
+                recolorables: [
+                  {
+                    get: () =>
+                      config.primary_color || defaultConfig.primary_color,
+                    set: (value) => {
+                      window.elementSdk.config.primary_color = value;
+                      window.elementSdk.setConfig({ primary_color: value });
+                    },
+                  },
+                ],
+                borderables: [],
+                fontEditable: undefined,
+                fontSizeable: undefined,
+              }),
+              mapToEditPanelValues: (config) =>
+                new Map([
+                  [
+                    "hospital_name",
+                    config.hospital_name || defaultConfig.hospital_name,
+                  ],
+                  [
+                    "dashboard_title",
+                    config.dashboard_title || defaultConfig.dashboard_title,
+                  ],
+                ]),
+            });
+          }
+        } catch (error) {
+          console.error("SDK initialization error:", error);
+          showToast("เกิดข้อผิดพลาดในการเริ่มต้นระบบ", "error");
+        }
+      }
+
+      // Menu functions
+      function toggleMenu(menuId) {
+        const menu = document.getElementById(menuId + "-menu");
+        const arrow = document.getElementById(menuId + "-arrow");
+        const header = arrow.parentElement;
+
+        document.querySelectorAll(".submenu").forEach((submenu) => {
+          if (submenu.id !== menuId + "-menu") {
+            submenu.classList.remove("active");
+          }
+        });
+
+        document.querySelectorAll(".arrow").forEach((arr) => {
+          if (arr.id !== menuId + "-arrow") {
+            arr.classList.remove("rotated");
+          }
+        });
+
+        document.querySelectorAll(".menu-header").forEach((h) => {
+          if (h !== header) {
+            h.classList.remove("active");
+          }
+        });
+
+        menu.classList.toggle("active");
+        arrow.classList.toggle("rotated");
+        header.classList.toggle("active");
+      }
+
+      function selectSubmenu(element, sectionName) {
+        document.querySelectorAll(".submenu-item").forEach((item) => {
+          item.classList.remove("active");
+        });
+
+        element.classList.add("active");
+        currentSection = sectionName;
+        renderCurrentSection();
+
+        if (window.innerWidth <= 768) {
+          document.getElementById("sidebar").classList.remove("active");
+        }
+      }
+
+      function toggleMobileMenu() {
+        document.getElementById("sidebar").classList.toggle("active");
+      }
+
+      // Render functions
+      function renderCurrentSection() {
+        destroyAllCharts();
+
+        const sectionTitles = {
+          "current-overview": {
+            title: "สถานการณ์การเงินปัจจุบัน",
+            desc: "ข้อมูลรายเดือนล่าสุด",
+          },
+          "yearly-overview": {
+            title: "Overview ประจำปี",
+            desc: "สรุปภาพรวมการเงินแต่ละปี",
+          },
+          "yearly-income": {
+            title: "รายรับประจำปี",
+            desc: "รายละเอียดรายรับแยกตามประเภท",
+          },
+          "yearly-expenses": {
+            title: "รายจ่ายประจำปี",
+            desc: "รายละเอียดรายจ่ายแยกตามประเภท",
+          },
+          dental: {
+            title: "Productivity - ทันตกรรม",
+            desc: "รายได้และข้อมูลการให้บริการทันตกรรม",
+          },
+          "thai-medicine": {
+            title: "Productivity - แผนไทย",
+            desc: "รายได้และข้อมูลการให้บริการแผนไทย",
+          },
+          "physical-therapy": {
+            title: "Productivity - กายภาพ",
+            desc: "รายได้และข้อมูลการให้บริการกายภาพบำบัด",
+          },
+          "rights-summary": {
+            title: "สรุปรายได้แยกตามสิทธิ",
+            desc: "เปรียบเทียบรายได้จากสิทธิต่างๆ",
+          },
+          opd: {
+            title: "Productivity - OPD",
+            desc: "รายได้และข้อมูลผู้ป่วยนอก",
+          },
+          ipd: {
+            title: "Productivity - IPD",
+            desc: "รายได้และข้อมูลผู้ป่วยใน",
+          },
+          "primary-care": {
+            title: "Productivity - ปฐมภูมิ",
+            desc: "ข้อมูลการให้บริการปฐมภูมิ",
+          },
+          accident: {
+            title: "Productivity - พรบ.",
+            desc: "รายได้จากอุบัติเหตุ",
+          },
+          "entry-form": {
+            title: "บันทึกข้อมูล",
+            desc: "เพิ่มข้อมูลใหม่เข้าระบบ",
+          },
+          "view-data": {
+            title: "ดูข้อมูลที่บันทึก",
+            desc: "รายการข้อมูลทั้งหมดในระบบ",
+          },
+        };
+
+        const section = sectionTitles[currentSection] || {
+          title: "Dashboard",
+          desc: "",
+        };
+        document.getElementById("current-section").textContent = section.title;
+        document.getElementById("section-description").textContent =
+          section.desc;
+
+        const contentArea = document.getElementById("content-area");
+
+        switch (currentSection) {
+          case "current-overview":
+            renderCurrentOverview(contentArea);
+            break;
+          case "yearly-overview":
+            renderYearlyOverview(contentArea);
+            break;
+          case "yearly-income":
+            renderYearlyIncome(contentArea);
+            break;
+          case "yearly-expenses":
+            renderYearlyExpenses(contentArea);
+            break;
+          case "dental":
+          case "thai-medicine":
+          case "physical-therapy":
+            renderDepartmentProductivity(contentArea, currentSection);
+            break;
+          case "rights-summary":
+            renderRightsSummary(contentArea);
+            break;
+          case "opd":
+            renderOPD(contentArea);
+            break;
+          case "ipd":
+            renderIPD(contentArea);
+            break;
+          case "primary-care":
+            renderPrimaryCare(contentArea);
+            break;
+          case "accident":
+            renderAccident(contentArea);
+            break;
+          case "entry-form":
+            renderEntryForm(contentArea);
+            break;
+          case "view-data":
+            renderViewData(contentArea);
+            break;
+          default:
+            contentArea.innerHTML = "<p>กำลังพัฒนา...</p>";
+        }
+      }
+
+      function renderCurrentOverview(container) {
+        const monthlyData = filterDataByCategory("current");
+
+        container.innerHTML = `
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <h3>เงินบำรุงคงเหลือแต่ละเดือน</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-current-balance"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>ภาระหนี้สินแต่ละเดือน</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-current-debt"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>ลูกหนี้แยกตามสิทธิ</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-current-receivables"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+        setTimeout(() => {
+          createLineChart(
+            "chart-current-balance",
+            monthlyData.balance,
+            "เงินบำรุง"
+          );
+          createLineChart("chart-current-debt", monthlyData.debt, "หนี้สิน");
+          createReceivablesPieChart(
+            "chart-current-receivables",
+            monthlyData.receivables
+          );
+        }, 100);
+      }
+
+      function renderYearlyOverview(container) {
+        const yearlyData = filterDataByCategory("yearly-overview");
+
+        container.innerHTML = `
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <h3>เงินบำรุงคงเหลือแต่ละปี</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-yearly-balance"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>ภาระหนี้สินเจ้าหนี้แต่ละปี</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-yearly-payables"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>ภาระหนี้สินลูกหนี้แต่ละปี</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-yearly-receivables"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>เงินบำรุงหักหนี้สิน</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-yearly-net"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>อัตราส่วนทางการเงิน</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-yearly-ratios"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Net Working Capital</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-yearly-working-capital"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>NET INCOME</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-yearly-net-income"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+        setTimeout(() => {
+          createLineChart(
+            "chart-yearly-balance",
+            yearlyData.balance,
+            "เงินบำรุง"
+          );
+          createLineChart(
+            "chart-yearly-payables",
+            yearlyData.payables,
+            "เจ้าหนี้"
+          );
+          createLineChart(
+            "chart-yearly-receivables",
+            yearlyData.receivables,
+            "ลูกหนี้"
+          );
+          createLineChart("chart-yearly-net", yearlyData.net, "เงินสุทธิ");
+          createMultiLineChart("chart-yearly-ratios", yearlyData.ratios);
+          createLineChart(
+            "chart-yearly-working-capital",
+            yearlyData.workingCapital,
+            "Net Working Capital"
+          );
+          createLineChart(
+            "chart-yearly-net-income",
+            yearlyData.netIncome,
+            "NET INCOME"
+          );
+        }, 100);
+      }
+
+      function renderYearlyIncome(container) {
+        const incomeData = filterDataByCategory("yearly-income");
+
+        container.innerHTML = `
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <h3>รวมรายรับสิทธิ UC</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-income-uc"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>เงิน UC</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-income-uc-cash"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>สิทธิ UC ตามจ่าย</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-income-uc-claim"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รวมรายรับสิทธิข้าราชการ</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-income-gov"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รวมรายรับสิทธิรัฐวิสาหกิจ</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-income-state"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รวมรายรับสิทธิ อปท.</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-income-local"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รวมรายรับชำระเงินเอง</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-income-self"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รวมรายรับสิทธิ พรบ.</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-income-accident"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รายรับอื่นๆ : ตรวจสุขภาพ/ต่างด้าว/อุดหนุน LP</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-income-other"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รายรับจากเงิน CF</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-income-cf"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+        setTimeout(() => {
+          createLineChart("chart-income-uc", incomeData.uc, "สิทธิ UC");
+          createLineChart("chart-income-uc-cash", incomeData.ucCash, "เงิน UC");
+          createLineChart(
+            "chart-income-uc-claim",
+            incomeData.ucClaim,
+            "UC ตามจ่าย"
+          );
+          createLineChart("chart-income-gov", incomeData.gov, "ข้าราชการ");
+          createLineChart(
+            "chart-income-state",
+            incomeData.state,
+            "รัฐวิสาหกิจ"
+          );
+          createLineChart("chart-income-local", incomeData.local, "อปท.");
+          createLineChart("chart-income-self", incomeData.self, "ชำระเงินเอง");
+          createLineChart("chart-income-accident", incomeData.accident, "พรบ.");
+          createLineChart(
+            "chart-income-other",
+            incomeData.other,
+            "ตรวจสุขภาพ/ต่างด้าว/อุดหนุน LP"
+          );
+          createLineChart("chart-income-cf", incomeData.cf, "CF");
+        }, 100);
+      }
+
+      function renderYearlyExpenses(container) {
+        const expenseData = filterDataByCategory("yearly-expenses");
+
+        container.innerHTML = `
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <h3>รายจ่ายด้านบุคลากร</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-expense-personnel"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รายจ่ายค่ายา</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-expense-medicine"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รายจ่ายวัสดุการแพทย์</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-expense-medical"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รายจ่าย Lab</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-expense-lab"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รายจ่ายค่าใช้สอย</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-expense-utility"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รายจ่ายวัสดุทั่วไป</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-expense-general"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รายจ่ายโครงการ</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-expense-project"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+        setTimeout(() => {
+          createLineChart(
+            "chart-expense-personnel",
+            expenseData.personnel,
+            "บุคลากร"
+          );
+          createLineChart(
+            "chart-expense-medicine",
+            expenseData.medicine,
+            "ค่ายา"
+          );
+          createLineChart(
+            "chart-expense-medical",
+            expenseData.medical,
+            "วัสดุการแพทย์"
+          );
+          createLineChart("chart-expense-lab", expenseData.lab, "Lab");
+          createLineChart(
+            "chart-expense-utility",
+            expenseData.utility,
+            "ค่าใช้สอย"
+          );
+          createLineChart(
+            "chart-expense-general",
+            expenseData.general,
+            "วัสดุทั่วไป"
+          );
+          createLineChart(
+            "chart-expense-project",
+            expenseData.project,
+            "โครงการ"
+          );
+        }, 100);
+      }
+
+      function renderDepartmentProductivity(container, department) {
+        const deptNames = {
+          dental: "ทันตกรรม",
+          "thai-medicine": "แผนไทย",
+          "physical-therapy": "กายภาพ",
+        };
+        const deptName = deptNames[department];
+        const deptData = filterDataByDepartment(department);
+
+        container.innerHTML = `
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <h3>รายได้ ${deptName} (ปี 2566 - ปัจจุบัน)</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-dept-revenue"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รายได้แยกตามสิทธิ UC</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-dept-uc"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รายได้แยกตามสิทธิข้าราชการ</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-dept-gov"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รายได้แยกตามสิทธิ อปท.</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-dept-local"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รายได้แยกตามสิทธิ ปกส.</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-dept-social"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รายได้อื่นๆ (ไม่มีสิทธิ/นอกเขต/สำรองจ่าย)</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-dept-other"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+        setTimeout(() => {
+          createLineChart("chart-dept-revenue", deptData.revenue, "รายได้รวม");
+          createLineChart("chart-dept-uc", deptData.uc, "UC");
+          createLineChart("chart-dept-gov", deptData.gov, "ข้าราชการ");
+          createLineChart("chart-dept-local", deptData.local, "อปท.");
+          createLineChart("chart-dept-social", deptData.social, "ปกส.");
+          createLineChart("chart-dept-other", deptData.other, "อื่นๆ");
+        }, 100);
+      }
+
+      function renderRightsSummary(container) {
+        const rightsData = filterDataByCategory("rights-summary");
+
+        container.innerHTML = `
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <h3>รวมรายได้เรียกเก็บหมวด UC</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-rights-uc"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รวมรายได้เรียกเก็บหมวด ข้าราชการ</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-rights-gov"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รวมรายได้เรียกเก็บหมวด อปท.</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-rights-local"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รวมรายได้เรียกเก็บหมวด ปกส.</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-rights-social"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รวมรายได้เรียกเก็บหมวด พรบ.</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-rights-accident"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+        setTimeout(() => {
+          createLineChart(
+            "chart-rights-uc",
+            rightsData.uc,
+            "รวมรายได้เรียกเก็บหมวด UC"
+          );
+          createLineChart(
+            "chart-rights-gov",
+            rightsData.gov,
+            "รวมรายได้เรียกเก็บหมวด ข้าราชการ"
+          );
+          createLineChart(
+            "chart-rights-local",
+            rightsData.local,
+            "รวมรายได้เรียกเก็บหมวด อปท."
+          );
+          createLineChart(
+            "chart-rights-social",
+            rightsData.social,
+            "รวมรายได้เรียกเก็บหมวด ปกส."
+          );
+          createLineChart(
+            "chart-rights-accident",
+            rightsData.accident,
+            "รวมรายได้เรียกเก็บหมวด พรบ."
+          );
+        }, 100);
+      }
+
+      function renderOPD(container) {
+        const opdData = filterDataByCategory("opd");
+
+        container.innerHTML = `
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <h3>รายได้ OPD</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-opd-revenue"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+        setTimeout(() => {
+          createLineChart("chart-opd-revenue", opdData.revenue, "รายได้ OPD");
+        }, 100);
+      }
+
+      function renderIPD(container) {
+        const ipdData = filterDataByCategory("ipd");
+
+        container.innerHTML = `
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <h3>รายได้ IPD</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-ipd-revenue"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>อัตราครองเตียง (%)</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-ipd-bed"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>ยอดรวม Admit (ราย)</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-ipd-admit"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Sum Adj RW</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-ipd-rw"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+        setTimeout(() => {
+          createLineChart(
+            "chart-ipd-revenue",
+            ipdData.revenue,
+            "รายได้",
+            "บาท"
+          );
+          createPercentageChart("chart-ipd-bed", ipdData.bed, "อัตราครองเตียง");
+          createNumberChart("chart-ipd-admit", ipdData.admit, "ยอดรวม Admit");
+          createNumberChart("chart-ipd-rw", ipdData.rw, "Sum Adj RW");
+        }, 100);
+      }
+
+      function renderPrimaryCare(container) {
+        const primaryData = filterDataByCategory("primary-care");
+
+        container.innerHTML = `
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <h3>บริการฝากครรภ์ (ANC)</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-primary-anc"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>การตรวจหลังคลอด (PNC)</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-primary-pnc"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>การคุมกำเนิด (FP)</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-primary-fp"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>คัดกรองมะเร็งปากมดลูก</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-primary-cervical"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>คัดกรองวัณโรค</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-primary-tb"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>ฉีดวัคซีนไข้หวัดใหญ่</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-primary-flu"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>ออกตรวจสุขภาพราชการ</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-primary-health-check"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+        setTimeout(() => {
+          createLineChart("chart-primary-anc", primaryData.anc, "ANC");
+          createLineChart("chart-primary-pnc", primaryData.pnc, "PNC");
+          createLineChart("chart-primary-fp", primaryData.fp, "FP");
+          createLineChart(
+            "chart-primary-cervical",
+            primaryData.cervical,
+            "คัดกรองมะเร็ง"
+          );
+          createLineChart("chart-primary-tb", primaryData.tb, "คัดกรองวัณโรค");
+          createLineChart(
+            "chart-primary-flu",
+            primaryData.flu,
+            "วัคซีนไข้หวัดใหญ่"
+          );
+          createLineChart(
+            "chart-primary-health-check",
+            primaryData.healthCheck,
+            "ออกตรวจสุขภาพราชการ"
+          );
+        }, 100);
+      }
+
+      function renderAccident(container) {
+        const accidentData = filterDataByCategory("accident");
+
+        container.innerHTML = `
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <h3>รายได้ พรบ.</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-accident-revenue"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+        setTimeout(() => {
+          createLineChart(
+            "chart-accident-revenue",
+            accidentData.revenue,
+            "รายได้ พรบ."
+          );
+        }, 100);
+      }
+
+      function renderEntryForm(container) {
+        container.innerHTML = `
+                <div class="data-entry-form">
+                    <h3>บันทึกข้อมูลใหม่</h3>
+                    <form id="data-entry-form" onsubmit="handleFormSubmit(event)">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="category">หมวดหมู่หลัก</label>
+                                <select id="category" onchange="updateSubcategories()">
+                                    <option value="">เลือกหมวดหมู่</option>
+                                    <option value="current">สถานการณ์ปัจจุบัน</option>
+                                    <option value="yearly-overview">Overview ประจำปี</option>
+                                    <option value="yearly-income">รายรับประจำปี</option>
+                                    <option value="yearly-expenses">รายจ่ายประจำปี</option>
+                                    <option value="dental">ทันตกรรม</option>
+                                    <option value="thai-medicine">แผนไทย</option>
+                                    <option value="physical-therapy">กายภาพ</option>
+                                    <option value="rights-summary">สรุปรายได้แยกตามสิทธิ</option>
+                                    <option value="opd">OPD</option>
+                                    <option value="ipd">IPD</option>
+                                    <option value="primary-care">ปฐมภูมิ</option>
+                                    <option value="accident">พรบ.</option>
+
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="subcategory">หมวดหมู่ย่อย</label>
+                                <select id="subcategory">
+                                    <option value="">เลือกหมวดหมู่หลักก่อน</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="department-group" style="display: none;">
+                                <label for="department">แผนก</label>
+                                <select id="department">
+                                    <option value="">เลือกแผนก</option>
+                                    <option value="ทันตกรรม">ทันตกรรม</option>
+                                    <option value="แผนไทย">แผนไทย</option>
+                                    <option value="กายภาพ">กายภาพ</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="month">เดือน</label>
+                                <select id="month">
+                                    <option value="">ไม่ระบุ</option>
+                                    <option value="01">มกราคม</option>
+                                    <option value="02">กุมภาพันธ์</option>
+                                    <option value="03">มีนาคม</option>
+                                    <option value="04">เมษายน</option>
+                                    <option value="05">พฤษภาคม</option>
+                                    <option value="06">มิถุนายน</option>
+                                    <option value="07">กรกฎาคม</option>
+                                    <option value="08">สิงหาคม</option>
+                                    <option value="09">กันยายน</option>
+                                    <option value="10">ตุลาคม</option>
+                                    <option value="11">พฤศจิกายน</option>
+                                    <option value="12">ธันวาคม</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="year">ปี (พ.ศ.)</label>
+                                <input type="number" id="year" placeholder="2568" min="2500" max="2999" step="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="amount">จำนวนเงิน (บาท)</label>
+                                <input type="number" id="amount" step="0.01" placeholder="0.00">
+                            </div>
+                            <div class="form-group">
+                                <label for="percentage">เปอร์เซ็นต์ (%)</label>
+                                <input type="number" id="percentage" step="0.01" placeholder="0.00" min="0" max="100">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="submit-btn">
+                            บันทึกข้อมูล
+                        </button>
+                    </form>
+                </div>
+            `;
+      }
+
+      // Global filter state for view data
+      let viewDataFilters = {
+        category: "all",
+        subcategory: "all",
+        month: "all",
+      };
+
+      // Pagination state
+      let currentPage = 1;
+      const itemsPerPage = 50;
+
+      function renderViewData(container) {
+        const filteredData = getFilteredData();
+
+        // Apply additional filters
+        let displayData = filteredData;
+
+        if (viewDataFilters.category !== "all") {
+          displayData = displayData.filter(
+            (d) => d.category === viewDataFilters.category
+          );
+        }
+
+        if (viewDataFilters.subcategory !== "all") {
+          displayData = displayData.filter(
+            (d) => d.subcategory === viewDataFilters.subcategory
+          );
+        }
+
+        if (viewDataFilters.month !== "all") {
+          displayData = displayData.filter(
+            (d) => d.month === viewDataFilters.month
+          );
+        }
+
+        // Pagination logic
+        const totalItems = displayData.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+        // Validate current page
+        if (currentPage > totalPages && totalPages > 0) {
+          currentPage = totalPages;
+        }
+        if (currentPage < 1) {
+          currentPage = 1;
+        }
+
+        // Get data for current page
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const paginatedData = displayData.slice(startIndex, endIndex);
+
+        // Get unique values for filter dropdowns
+        const categories = [
+          ...new Set(filteredData.map((d) => d.category)),
+        ].sort();
+        const subcategories =
+          viewDataFilters.category === "all"
+            ? [...new Set(filteredData.map((d) => d.subcategory))].sort()
+            : [
+                ...new Set(
+                  filteredData
+                    .filter((d) => d.category === viewDataFilters.category)
+                    .map((d) => d.subcategory)
+                ),
+              ].sort();
+        const months = [
+          ...new Set(filteredData.map((d) => d.month).filter((m) => m)),
+        ].sort();
+
+        const categoryOptions = categories
+          .map(
+            (cat) =>
+              `<option value="${cat}" ${
+                viewDataFilters.category === cat ? "selected" : ""
+              }>${getCategoryName(cat)}</option>`
+          )
+          .join("");
+
+        const subcategoryOptions = subcategories
+          .map(
+            (sub) =>
+              `<option value="${sub}" ${
+                viewDataFilters.subcategory === sub ? "selected" : ""
+              }>${sub}</option>`
+          )
+          .join("");
+
+        const monthOptions = months
+          .map(
+            (mon) =>
+              `<option value="${mon}" ${
+                viewDataFilters.month === mon ? "selected" : ""
+              }>${getMonthName(mon)}</option>`
+          )
+          .join("");
+
+        if (filteredData.length === 0) {
+          const message =
+            selectedYear === "all"
+              ? "ยังไม่มีข้อมูลในระบบ กรุณาบันทึกข้อมูลใหม่"
+              : `ไม่พบข้อมูลสำหรับปี ${selectedYear}`;
+
+          container.innerHTML = `
+                    <div style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 15px; padding: 20px; box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37); margin-bottom: 20px;">
+                        <h4 style="color: #374151; margin: 0 0 15px; font-size: 16px; font-weight: 600;">ตัวกรองข้อมูล</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            <div class="form-group" style="margin: 0;">
+                                <label style="margin-bottom: 5px; font-size: 13px; display: block; color: #4b5563; font-weight: 500;">หมวดหมู่หลัก</label>
+                                <select id="filter-category" onchange="handleViewDataFilterChange('category', this.value)" style="padding: 8px 12px; border: 2px solid rgba(107, 114, 128, 0.2); border-radius: 8px; background: white; color: #4b5563; font-family: 'Prompt', sans-serif; font-size: 14px; width: 100%; height: 40px;">
+                                    <option value="all">ทั้งหมด</option>
+                                    ${categoryOptions}
+                                </select>
+                            </div>
+                            
+                            <div class="form-group" style="margin: 0;">
+                                <label style="margin-bottom: 5px; font-size: 13px; display: block; color: #4b5563; font-weight: 500;">หมวดหมู่ย่อย</label>
+                                <select id="filter-subcategory" onchange="handleViewDataFilterChange('subcategory', this.value)" style="padding: 8px 12px; border: 2px solid rgba(107, 114, 128, 0.2); border-radius: 8px; background: white; color: #4b5563; font-family: 'Prompt', sans-serif; font-size: 14px; width: 100%; height: 40px;">
+                                    <option value="all">ทั้งหมด</option>
+                                    ${subcategoryOptions}
+                                </select>
+                            </div>
+                            
+                            <div class="form-group" style="margin: 0;">
+                                <label style="margin-bottom: 5px; font-size: 13px; display: block; color: #4b5563; font-weight: 500;">เดือน</label>
+                                <select id="filter-month" onchange="handleViewDataFilterChange('month', this.value)" style="padding: 8px 12px; border: 2px solid rgba(107, 114, 128, 0.2); border-radius: 8px; background: white; color: #4b5563; font-family: 'Prompt', sans-serif; font-size: 14px; width: 100%; height: 40px;">
+                                    <option value="all">ทั้งหมด</option>
+                                    ${monthOptions}
+                                </select>
+                            </div>
+                            
+                            <div class="form-group" style="margin: 0; display: flex; align-items: flex-end;">
+                                <button onclick="resetViewDataFilters()" class="btn btn-primary" style="width: 100%; padding: 8px 12px; font-size: 14px; background: #6b7280; height: 40px; white-space: nowrap;">
+                                    รีเซ็ตตัวกรอง
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="data-table">
+                        <h3>ข้อมูลที่บันทึก</h3>
+                        <p style="text-align: center; color: #6b7280; padding: 40px;">${message}</p>
+                    </div>
+                `;
+          return;
+        }
+
+        const tableRows = paginatedData
+          .map(
+            (record) => `
+                <tr>
+                    <td>${getCategoryName(record.category)}</td>
+                    <td>${record.subcategory}</td>
+                    <td>${record.department || "-"}</td>
+                    <td>${record.month ? getMonthName(record.month) : "-"}</td>
+                    <td>${record.year}</td>
+                    <td style="text-align: right;">${Number(
+                      record.amount
+                    ).toLocaleString("th-TH", {
+                      minimumFractionDigits: 2,
+                    })}</td>
+                    <td style="text-align: right;">${
+                      record.percentage
+                        ? Number(record.percentage).toFixed(2) + "%"
+                        : "-"
+                    }</td>
+                    <td>
+                        <button class="delete-btn" style="background: #f59e0b; margin-right: 5px;" onclick="editRecord('${
+                          record.__backendId
+                        }')">แก้ไข</button>
+                        <button class="delete-btn" onclick="deleteRecord('${
+                          record.__backendId
+                        }')">ลบ</button>
+                    </td>
+                </tr>
+            `
+          )
+          .join("");
+
+        const yearText =
+          selectedYear === "all" ? "ทุกปี" : `ปี ${selectedYear}`;
+        const noDataMessage =
+          paginatedData.length === 0
+            ? '<tr><td colspan="7" style="text-align: center; padding: 40px; color: #6b7280;">ไม่พบข้อมูลที่ตรงกับเงื่อนไขการค้นหา</td></tr>'
+            : tableRows;
+
+        // Show current page range
+        const startItem = totalItems > 0 ? startIndex + 1 : 0;
+        const endItem = Math.min(endIndex, totalItems);
+        const pageRangeText =
+          totalItems > 0
+            ? ` (แสดง ${startItem}-${endItem} จาก ${totalItems} รายการ)`
+            : "";
+
+        container.innerHTML = `
+                <div style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 15px; padding: 20px; box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37); margin-bottom: 20px;">
+                    <h4 style="color: #374151; margin: 0 0 15px; font-size: 16px; font-weight: 600;">ตัวกรองข้อมูล</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div class="form-group" style="margin: 0;">
+                            <label style="margin-bottom: 5px; font-size: 13px; display: block; color: #4b5563; font-weight: 500;">หมวดหมู่หลัก</label>
+                            <select id="filter-category" onchange="handleViewDataFilterChange('category', this.value)" style="padding: 8px 12px; border: 2px solid rgba(107, 114, 128, 0.2); border-radius: 8px; background: white; color: #4b5563; font-family: 'Prompt', sans-serif; font-size: 14px; width: 100%; height: 40px;">
+                                <option value="all">ทั้งหมด</option>
+                                ${categoryOptions}
+                            </select>
+                        </div>
+                        
+                        <div class="form-group" style="margin: 0;">
+                            <label style="margin-bottom: 5px; font-size: 13px; display: block; color: #4b5563; font-weight: 500;">หมวดหมู่ย่อย</label>
+                            <select id="filter-subcategory" onchange="handleViewDataFilterChange('subcategory', this.value)" style="padding: 8px 12px; border: 2px solid rgba(107, 114, 128, 0.2); border-radius: 8px; background: white; color: #4b5563; font-family: 'Prompt', sans-serif; font-size: 14px; width: 100%; height: 40px;">
+                                <option value="all">ทั้งหมด</option>
+                                ${subcategoryOptions}
+                            </select>
+                        </div>
+                        
+                        <div class="form-group" style="margin: 0;">
+                            <label style="margin-bottom: 5px; font-size: 13px; display: block; color: #4b5563; font-weight: 500;">เดือน</label>
+                            <select id="filter-month" onchange="handleViewDataFilterChange('month', this.value)" style="padding: 8px 12px; border: 2px solid rgba(107, 114, 128, 0.2); border-radius: 8px; background: white; color: #4b5563; font-family: 'Prompt', sans-serif; font-size: 14px; width: 100%; height: 40px;">
+                                <option value="all">ทั้งหมด</option>
+                                ${monthOptions}
+                            </select>
+                        </div>
+                        
+                        <div class="form-group" style="margin: 0; display: flex; align-items: flex-end;">
+                            <button onclick="resetViewDataFilters()" class="btn btn-primary" style="width: 100%; padding: 8px 12px; font-size: 14px; background: #6b7280; height: 40px; white-space: nowrap;">
+                                รีเซ็ตตัวกรอง
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="data-table">
+                    <h3>ข้อมูลที่บันทึก - ${yearText}${pageRangeText}</h3>
+                    
+                    <div style="flex: 1; overflow-y: auto; min-height: 0;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>หมวดหมู่หลัก</th>
+                                    <th>หมวดหมู่ย่อย</th>
+                                    <th>แผนก</th>
+                                    <th>เดือน</th>
+                                    <th>ปี</th>
+                                    <th style="text-align: right;">จำนวนเงิน</th>
+                                    <th style="text-align: right;">%</th>
+                                    <th style="width: 150px;">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${noDataMessage}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    ${createPaginationControls(
+                      totalItems,
+                      currentPage,
+                      itemsPerPage
+                    )}
+                </div>
+            `;
+      }
+
+      function handleViewDataFilterChange(filterType, value) {
+        viewDataFilters[filterType] = value;
+
+        // Reset subcategory filter when category changes
+        if (filterType === "category") {
+          viewDataFilters.subcategory = "all";
+        }
+
+        // Reset to first page when filters change
+        currentPage = 1;
+        renderCurrentSection();
+      }
+
+      function resetViewDataFilters() {
+        viewDataFilters = {
+          category: "all",
+          subcategory: "all",
+          month: "all",
+        };
+        currentPage = 1;
+        renderCurrentSection();
+      }
+
+      function changePage(page) {
+        currentPage = page;
+        renderCurrentSection();
+      }
+
+      function goToPage(direction) {
+        if (direction === "prev" && currentPage > 1) {
+          currentPage--;
+        } else if (direction === "next") {
+          // Will be validated in renderViewData
+          currentPage++;
+        }
+        renderCurrentSection();
+      }
+
+      function createPaginationControls(totalItems, currentPage, itemsPerPage) {
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+        if (totalPages <= 1) {
+          return "";
+        }
+
+        let paginationHTML = `
+                <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px; padding: 20px; background: rgba(255, 255, 255, 0.5); border-radius: 10px;">
+                    <button onclick="goToPage('prev')" ${
+                      currentPage <= 1 ? "disabled" : ""
+                    } 
+                            style="padding: 8px 12px; border: 1px solid #6b7280; border-radius: 6px; background: ${
+                              currentPage <= 1 ? "#f3f4f6" : "white"
+                            }; color: ${
+          currentPage <= 1 ? "#9ca3af" : "#4b5563"
+        }; cursor: ${
+          currentPage <= 1 ? "not-allowed" : "pointer"
+        }; font-family: 'Prompt', sans-serif;">
+                        ← ก่อนหน้า
+                    </button>
+            `;
+
+        // Show page numbers
+        const maxVisiblePages = 5;
+        let startPage = Math.max(
+          1,
+          currentPage - Math.floor(maxVisiblePages / 2)
+        );
+        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+        // Adjust start page if we're near the end
+        if (endPage - startPage < maxVisiblePages - 1) {
+          startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        }
+
+        // First page and ellipsis
+        if (startPage > 1) {
+          paginationHTML += `
+                    <button onclick="changePage(1)" style="padding: 8px 12px; border: 1px solid #6b7280; border-radius: 6px; background: white; color: #4b5563; cursor: pointer; font-family: 'Prompt', sans-serif;">1</button>
+                `;
+          if (startPage > 2) {
+            paginationHTML += `<span style="color: #6b7280; padding: 0 5px;">...</span>`;
+          }
+        }
+
+        // Page numbers
+        for (let i = startPage; i <= endPage; i++) {
+          const isActive = i === currentPage;
+          paginationHTML += `
+                    <button onclick="changePage(${i})" 
+                            style="padding: 8px 12px; border: 1px solid #6b7280; border-radius: 6px; background: ${
+                              isActive ? "#6b7280" : "white"
+                            }; color: ${
+            isActive ? "white" : "#4b5563"
+          }; cursor: pointer; font-family: 'Prompt', sans-serif; font-weight: ${
+            isActive ? "600" : "400"
+          };">
+                        ${i}
+                    </button>
+                `;
+        }
+
+        // Last page and ellipsis
+        if (endPage < totalPages) {
+          if (endPage < totalPages - 1) {
+            paginationHTML += `<span style="color: #6b7280; padding: 0 5px;">...</span>`;
+          }
+          paginationHTML += `
+                    <button onclick="changePage(${totalPages})" style="padding: 8px 12px; border: 1px solid #6b7280; border-radius: 6px; background: white; color: #4b5563; cursor: pointer; font-family: 'Prompt', sans-serif;">${totalPages}</button>
+                `;
+        }
+
+        paginationHTML += `
+                    <button onclick="goToPage('next')" ${
+                      currentPage >= totalPages ? "disabled" : ""
+                    } 
+                            style="padding: 8px 12px; border: 1px solid #6b7280; border-radius: 6px; background: ${
+                              currentPage >= totalPages ? "#f3f4f6" : "white"
+                            }; color: ${
+          currentPage >= totalPages ? "#9ca3af" : "#4b5563"
+        }; cursor: ${
+          currentPage >= totalPages ? "not-allowed" : "pointer"
+        }; font-family: 'Prompt', sans-serif;">
+                        ถัดไป →
+                    </button>
+                </div>
+                
+                <div style="text-align: center; margin-top: 10px; color: #6b7280; font-size: 14px;">
+                    แสดงหน้า ${currentPage} จาก ${totalPages} (รวม ${totalItems} รายการ)
+                </div>
+            `;
+
+        return paginationHTML;
+      }
+
+      // Form handling
+      function updateSubcategories() {
+        const category = document.getElementById("category").value;
+        const subcategorySelect = document.getElementById("subcategory");
+        const departmentGroup = document.getElementById("department-group");
+
+        // Hide department field for all categories
+        departmentGroup.style.display = "none";
+        document.getElementById("department").value = "";
+
+        const subcategories = {
+          current: [
+            "เงินบำรุงคงเหลือ",
+            "ภาระหนี้สิน",
+            "ลูกหนี้-นอกต้นสังกัด",
+            "ลูกหนี้-UC",
+            "ลูกหนี้-ปกส",
+            "ลูกหนี้-ข้าราชการ/อปท/รัฐวิสาหกิจ",
+            "ลูกหนี้-อื่นๆ",
+          ],
+          "yearly-overview": [
+            "เงินบำรุงคงเหลือ",
+            "เจ้าหนี้",
+            "ลูกหนี้",
+            "เงินบำรุงหักหนี้สิน",
+            "Current Ratio",
+            "Quick Ratio",
+            "Cash Ratio",
+            "Net Working Capital",
+            "NET INCOME",
+          ],
+          "yearly-income": [
+            "รวมรายรับสิทธิ UC",
+            "เงิน UC",
+            "สิทธิ UC ตามจ่าย",
+            "รวมรายรับข้าราชการ",
+            "รวมรายรับรัฐวิสาหกิจ",
+            "รวมรายรับ อปท.",
+            "รวมรายรับชำระเงินเอง",
+            "รวมรายรับ พรบ.",
+            "รายรับอื่นๆ : ตรวจสุขภาพ/ต่างด้าว/อุดหนุน LP",
+            "รายรับจากเงิน CF",
+          ],
+          "yearly-expenses": [
+            "รายจ่ายบุคลากร",
+            "รายจ่ายค่ายา",
+            "รายจ่ายวัสดุการแพทย์",
+            "รายจ่าย Lab",
+            "รายจ่ายค่าใช้สอย",
+            "รายจ่ายวัสดุทั่วไป",
+            "รายจ่ายโครงการ",
+          ],
+          dental: [
+            "รายได้รวม",
+            "รายได้-UC",
+            "รายได้-ข้าราชการ",
+            "รายได้-อปท",
+            "รายได้-ปกส",
+            "รายได้-อื่นๆ",
+          ],
+          "thai-medicine": [
+            "รายได้รวม",
+            "รายได้-UC",
+            "รายได้-ข้าราชการ",
+            "รายได้-อปท",
+            "รายได้-ปกส",
+            "รายได้-อื่นๆ",
+          ],
+          "physical-therapy": [
+            "รายได้รวม",
+            "รายได้-UC",
+            "รายได้-ข้าราชการ",
+            "รายได้-อปท",
+            "รายได้-ปกส",
+            "รายได้-อื่นๆ",
+          ],
+          "rights-summary": [
+            "รวมรายได้เรียกเก็บหมวด UC",
+            "รวมรายได้เรียกเก็บหมวด ข้าราชการ",
+            "รวมรายได้เรียกเก็บหมวด อปท.",
+            "รวมรายได้เรียกเก็บหมวด ปกส.",
+            "รวมรายได้เรียกเก็บหมวด พรบ.",
+          ],
+          opd: ["รายได้ OPD"],
+          ipd: [
+            "รายได้ IPD (บาท)",
+            "อัตราครองเตียง (%)",
+            "ยอดรวม Admit (ราย)",
+            "Sum Adj RW",
+          ],
+          "primary-care": [
+            "ANC",
+            "PNC",
+            "FP",
+            "คัดกรองมะเร็งปากมดลูก",
+            "คัดกรองวัณโรค",
+            "ฉีดวัคซีนไข้หวัดใหญ่",
+            "ออกตรวจสุขภาพราชการ",
+          ],
+          accident: ["รายได้ พรบ."],
+        };
+
+        const options = subcategories[category] || [];
+        subcategorySelect.innerHTML =
+          '<option value="">เลือกหมวดหมู่ย่อย</option>' +
+          options
+            .map((opt) => `<option value="${opt}">${opt}</option>`)
+            .join("");
+      }
+
+      async function handleFormSubmit(event) {
+        event.preventDefault();
+
+        const submitBtn = document.getElementById("submit-btn");
+        submitBtn.disabled = true;
+
+        // Check if SDK is available
+        if (!window.dataSdk) {
+          showToast("ระบบยังไม่พร้อม กรุณารอสักครู่", "error");
+          submitBtn.disabled = false;
+          return;
+        }
+
+        // Check if we're editing or creating
+        if (editingRecordId) {
+          // Update existing record
+          submitBtn.textContent = "กำลังบันทึก...";
+
+          const record = allData.find((r) => r.__backendId === editingRecordId);
+          if (!record) {
+            showToast("ไม่พบข้อมูลที่ต้องการแก้ไข", "error");
+            submitBtn.disabled = false;
+            submitBtn.textContent = "บันทึกการแก้ไข";
+            return;
+          }
+
+          // Update record with new values
+          record.category = document.getElementById("category").value;
+          record.subcategory = document.getElementById("subcategory").value;
+          record.department = document.getElementById("department").value || "";
+          record.month = document.getElementById("month").value;
+          record.year = document.getElementById("year").value;
+          record.amount =
+            parseFloat(document.getElementById("amount").value) || 0;
+          record.percentage = document.getElementById("percentage").value
+            ? parseFloat(document.getElementById("percentage").value)
+            : 0;
+
+          const result = await window.dataSdk.update(record);
+
+          if (result.isOk) {
+            showToast("แก้ไขข้อมูลสำเร็จ", "success");
+            cancelEdit();
+          } else {
+            showToast(
+              "เกิดข้อผิดพลาดในการแก้ไขข้อมูล: " +
+                (result.error?.message || "Unknown error"),
+              "error"
+            );
+          }
+
+          submitBtn.disabled = false;
+          submitBtn.textContent = "บันทึกการแก้ไข";
+        } else {
+          // Create new record
+          if (allData.length >= 999) {
+            showToast(
+              "ไม่สามารถเพิ่มข้อมูลได้ เนื่องจากถึงขอบเขตสูงสุด 999 รายการ",
+              "error"
+            );
+            submitBtn.disabled = false;
+            return;
+          }
+
+          submitBtn.textContent = "กำลังบันทึก...";
+
+          const formData = {
+            id: "data-" + Date.now().toString(),
+            category: document.getElementById("category").value,
+            subcategory: document.getElementById("subcategory").value,
+            department: document.getElementById("department").value || "",
+            month: document.getElementById("month").value,
+            year: document.getElementById("year").value,
+            amount: parseFloat(document.getElementById("amount").value) || 0,
+            percentage: document.getElementById("percentage").value
+              ? parseFloat(document.getElementById("percentage").value)
+              : 0,
+            created_at: new Date().toISOString(),
+          };
+
+          try {
+            const result = await window.dataSdk.create(formData);
+
+            if (result.isOk) {
+              showToast("บันทึกข้อมูลสำเร็จ", "success");
+              document.getElementById("data-entry-form").reset();
+            } else {
+              showToast(
+                "เกิดข้อผิดพลาดในการบันทึกข้อมูล: " +
+                  (result.error?.message || "Unknown error"),
+                "error"
+              );
+              console.error("Create error:", result.error);
+            }
+          } catch (error) {
+            showToast("เกิดข้อผิดพลาด: " + error.message, "error");
+            console.error("Create exception:", error);
+          }
+
+          submitBtn.disabled = false;
+          submitBtn.textContent = "บันทึกข้อมูล";
+        }
+      }
+
+      let editingRecordId = null;
+
+      function editRecord(backendId) {
+        const record = allData.find((r) => r.__backendId === backendId);
+        if (!record) return;
+
+        // Switch to entry form section
+        currentSection = "entry-form";
+        renderCurrentSection();
+
+        // Populate form with existing data
+        setTimeout(() => {
+          document.getElementById("category").value = record.category;
+          updateSubcategories();
+
+          setTimeout(() => {
+            document.getElementById("subcategory").value = record.subcategory;
+            document.getElementById("department").value =
+              record.department || "";
+            document.getElementById("month").value = record.month || "";
+            document.getElementById("year").value = record.year;
+            document.getElementById("amount").value = record.amount;
+            document.getElementById("percentage").value =
+              record.percentage || "";
+
+            // Department field is always hidden
+            const departmentGroup = document.getElementById("department-group");
+            departmentGroup.style.display = "none";
+
+            // Store the record ID being edited
+            editingRecordId = backendId;
+
+            // Update button text
+            const submitBtn = document.getElementById("submit-btn");
+            submitBtn.textContent = "บันทึกการแก้ไข";
+
+            // Add cancel button
+            const form = document.getElementById("data-entry-form");
+            if (!document.getElementById("cancel-edit-btn")) {
+              const cancelBtn = document.createElement("button");
+              cancelBtn.type = "button";
+              cancelBtn.id = "cancel-edit-btn";
+              cancelBtn.className = "btn btn-primary";
+              cancelBtn.style.background = "#6b7280";
+              cancelBtn.style.marginLeft = "10px";
+              cancelBtn.textContent = "ยกเลิกการแก้ไข";
+              cancelBtn.onclick = cancelEdit;
+              submitBtn.parentElement.appendChild(cancelBtn);
+            }
+
+            // Update section title
+            document.getElementById("current-section").textContent =
+              "แก้ไขข้อมูล";
+            document.getElementById("section-description").textContent =
+              "แก้ไขข้อมูลที่บันทึกไว้";
+          }, 100);
+        }, 100);
+      }
+
+      function cancelEdit() {
+        editingRecordId = null;
+        document.getElementById("data-entry-form").reset();
+        document.getElementById("submit-btn").textContent = "บันทึกข้อมูล";
+
+        const cancelBtn = document.getElementById("cancel-edit-btn");
+        if (cancelBtn) cancelBtn.remove();
+
+        document.getElementById("current-section").textContent = "บันทึกข้อมูล";
+        document.getElementById("section-description").textContent =
+          "เพิ่มข้อมูลใหม่เข้าระบบ";
+      }
+
+      async function deleteRecord(backendId) {
+        const record = allData.find((r) => r.__backendId === backendId);
+        if (!record) return;
+
+        const confirmDiv = document.createElement("div");
+        confirmDiv.style.cssText =
+          "position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 15px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); z-index: 10000; text-align: center;";
+        confirmDiv.innerHTML = `
+                <h3 style="color: #4c63d2; margin: 0 0 15px;">ยืนยันการลบข้อมูล</h3>
+                <p style="color: #6b7280; margin: 0 0 20px;">คุณต้องการลบข้อมูลนี้ใช่หรือไม่?</p>
+                <button onclick="confirmDelete('${backendId}')" class="btn btn-primary" style="background: #ef4444; margin-right: 10px;">ลบ</button>
+                <button onclick="cancelDelete()" class="btn btn-primary">ยกเลิก</button>
+            `;
+
+        const overlay = document.createElement("div");
+        overlay.id = "delete-overlay";
+        overlay.style.cssText =
+          "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999;";
+        overlay.onclick = cancelDelete;
+
+        document.body.appendChild(overlay);
+        document.body.appendChild(confirmDiv);
+        window.deleteConfirmDiv = confirmDiv;
+      }
+
+      async function confirmDelete(backendId) {
+        const record = allData.find((r) => r.__backendId === backendId);
+        if (!record) return;
+
+        const result = await window.dataSdk.delete(record);
+
+        if (result.isOk) {
+          showToast("ลบข้อมูลสำเร็จ", "success");
+        } else {
+          showToast("เกิดข้อผิดพลาดในการลบข้อมูล", "error");
+        }
+
+        cancelDelete();
+      }
+
+      function cancelDelete() {
+        const overlay = document.getElementById("delete-overlay");
+        if (overlay) overlay.remove();
+        if (window.deleteConfirmDiv) window.deleteConfirmDiv.remove();
+      }
+
+      // Chart popup functions
+      function showChartPopup(title, label, value, dataPoint, unit = "บาท") {
+        const overlay = document.getElementById("chart-popup-overlay");
+        const popupTitle = document.getElementById("popup-title");
+        const popupContent = document.getElementById("popup-content");
+
+        popupTitle.textContent = title;
+
+        let valueDisplay = "";
+        if (unit === "บาท") {
+          valueDisplay = `${Number(value).toLocaleString("th-TH", {
+            minimumFractionDigits: 2,
+          })} ${unit}`;
+        } else if (unit === "%") {
+          valueDisplay = `${Number(value).toFixed(2)}%`;
+        } else if (unit === "") {
+          valueDisplay = Number(value).toLocaleString("th-TH", {
+            minimumFractionDigits: 2,
+          });
+        } else {
+          valueDisplay = `${Number(value).toLocaleString("th-TH", {
+            minimumFractionDigits: 2,
+          })} ${unit}`;
+        }
+
+        let contentHTML = `
+                <div class="chart-popup-row">
+                    <span class="chart-popup-label">ช่วงเวลา:</span>
+                    <span class="chart-popup-value">${label}</span>
+                </div>
+                <div class="chart-popup-row">
+                    <span class="chart-popup-label">ค่า:</span>
+                    <span class="chart-popup-value">${valueDisplay}</span>
+                </div>
+            `;
+
+        // Add additional data if available
+        if (dataPoint) {
+          if (dataPoint.category) {
+            contentHTML += `
+                        <div class="chart-popup-row">
+                            <span class="chart-popup-label">หมวดหมู่:</span>
+                            <span class="chart-popup-value">${getCategoryName(
+                              dataPoint.category
+                            )}</span>
+                        </div>
+                    `;
+          }
+          if (dataPoint.subcategory) {
+            contentHTML += `
+                        <div class="chart-popup-row">
+                            <span class="chart-popup-label">หมวดหมู่ย่อย:</span>
+                            <span class="chart-popup-value">${dataPoint.subcategory}</span>
+                        </div>
+                    `;
+          }
+          if (dataPoint.percentage) {
+            contentHTML += `
+                        <div class="chart-popup-row">
+                            <span class="chart-popup-label">เปอร์เซ็นต์:</span>
+                            <span class="chart-popup-value">${Number(
+                              dataPoint.percentage
+                            ).toFixed(2)}%</span>
+                        </div>
+                    `;
+          }
+        }
+
+        popupContent.innerHTML = contentHTML;
+        overlay.classList.add("show");
+      }
+
+      function closeChartPopup(event) {
+        if (event) {
+          event.stopPropagation();
+        }
+        const overlay = document.getElementById("chart-popup-overlay");
+        overlay.classList.remove("show");
+      }
+
+      function showDepartmentRightsPopup(
+        rightsType,
+        departmentName,
+        year,
+        value
+      ) {
+        const overlay = document.getElementById("chart-popup-overlay");
+        const popupTitle = document.getElementById("popup-title");
+        const popupContent = document.getElementById("popup-content");
+
+        popupTitle.textContent = rightsType;
+
+        let contentHTML = `
+                <div class="chart-popup-row">
+                    <span class="chart-popup-label">แผนก:</span>
+                    <span class="chart-popup-value">${departmentName}</span>
+                </div>
+                <div class="chart-popup-row">
+                    <span class="chart-popup-label">ปี พ.ศ.:</span>
+                    <span class="chart-popup-value">${year}</span>
+                </div>
+                <div class="chart-popup-row">
+                    <span class="chart-popup-label">ยอดเงิน:</span>
+                    <span class="chart-popup-value">${Number(
+                      value
+                    ).toLocaleString("th-TH", {
+                      minimumFractionDigits: 2,
+                    })} บาท</span>
+                </div>
+            `;
+
+        popupContent.innerHTML = contentHTML;
+        overlay.classList.add("show");
+      }
+
+      function showRatioPopup(ratioName, year, value) {
+        const overlay = document.getElementById("chart-popup-overlay");
+        const popupTitle = document.getElementById("popup-title");
+        const popupContent = document.getElementById("popup-content");
+
+        popupTitle.textContent = ratioName;
+
+        let contentHTML = `
+                <div class="chart-popup-row">
+                    <span class="chart-popup-label">ปี:</span>
+                    <span class="chart-popup-value">${year}</span>
+                </div>
+                <div class="chart-popup-row">
+                    <span class="chart-popup-label">ค่าอัตราส่วน:</span>
+                    <span class="chart-popup-value">${Number(value).toFixed(
+                      2
+                    )}</span>
+                </div>
+            `;
+
+        popupContent.innerHTML = contentHTML;
+        overlay.classList.add("show");
+      }
+
+      // Chart functions
+      // Color palette for charts
+      const chartColors = [
+        { border: "#3b82f6", bg: "rgba(59, 130, 246, 0.1)" },
+        { border: "#10b981", bg: "rgba(16, 185, 129, 0.1)" },
+        { border: "#f59e0b", bg: "rgba(245, 158, 11, 0.1)" },
+        { border: "#ef4444", bg: "rgba(239, 68, 68, 0.1)" },
+        { border: "#8b5cf6", bg: "rgba(139, 92, 246, 0.1)" },
+        { border: "#ec4899", bg: "rgba(236, 72, 153, 0.1)" },
+        { border: "#06b6d4", bg: "rgba(6, 182, 212, 0.1)" },
+        { border: "#84cc16", bg: "rgba(132, 204, 22, 0.1)" },
+        { border: "#f97316", bg: "rgba(249, 115, 22, 0.1)" },
+        { border: "#6366f1", bg: "rgba(99, 102, 241, 0.1)" },
+      ];
+
+      function getChartColor(index) {
+        return chartColors[index % chartColors.length];
+      }
+
+      function createLineChart(canvasId, data, label, unit = "บาท") {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+
+        const chartData = prepareChartData(data);
+        const colorIndex = Object.keys(charts).length % chartColors.length;
+        const color = getChartColor(colorIndex);
+
+        // Choose chart type based on year filter and user selection
+        const currentChartType = selectedYear === "all" ? chartType : "bar";
+
+        const chartConfig = {
+          type: currentChartType,
+          data: {
+            labels: chartData.labels,
+            datasets: [
+              {
+                label: label,
+                data: chartData.values,
+                borderColor: color.border,
+                backgroundColor:
+                  currentChartType === "bar" ? color.border : color.bg,
+                borderWidth: currentChartType === "bar" ? 1 : 2,
+                dataPoints: chartData.dataPoints,
+                unit: unit,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            onClick: (event, activeElements) => {
+              if (activeElements.length > 0) {
+                const datasetIndex = activeElements[0].datasetIndex;
+                const index = activeElements[0].index;
+                const chart = charts[canvasId];
+                const dataset = chart.data.datasets[datasetIndex];
+                const labelText = chart.data.labels[index];
+                const value = dataset.data[index];
+                const dataPoint = dataset.dataPoints
+                  ? dataset.dataPoints[index]
+                  : null;
+                const unitText = dataset.unit || "บาท";
+
+                showChartPopup(label, labelText, value, dataPoint, unitText);
+              }
+            },
+            plugins: {
+              legend: {
+                labels: {
+                  font: { family: "Prompt" },
+                },
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  font: { family: "Prompt" },
+                  callback: function (value) {
+                    return value.toLocaleString("th-TH");
+                  },
+                },
+              },
+              x: {
+                ticks: {
+                  font: { family: "Prompt" },
+                },
+              },
+            },
+          },
+        };
+
+        // Add line-specific options
+        if (currentChartType === "line") {
+          chartConfig.data.datasets[0].tension = 0.4;
+          chartConfig.data.datasets[0].fill = true;
+          chartConfig.data.datasets[0].pointBackgroundColor = color.border;
+          chartConfig.data.datasets[0].pointBorderColor = "#ffffff";
+          chartConfig.data.datasets[0].pointBorderWidth = 2;
+          chartConfig.data.datasets[0].pointRadius = 5;
+        }
+
+        charts[canvasId] = new Chart(ctx, chartConfig);
+      }
+
+      function createPercentageChart(canvasId, data, label) {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+
+        const chartData = prepareChartData(data);
+        const colorIndex = Object.keys(charts).length % chartColors.length;
+        const color = getChartColor(colorIndex);
+
+        // Choose chart type based on year filter and user selection
+        const currentChartType = selectedYear === "all" ? chartType : "bar";
+
+        const chartConfig = {
+          type: currentChartType,
+          data: {
+            labels: chartData.labels,
+            datasets: [
+              {
+                label: label,
+                data: chartData.values,
+                borderColor: color.border,
+                backgroundColor:
+                  currentChartType === "bar" ? color.border : color.bg,
+                borderWidth: currentChartType === "bar" ? 1 : 2,
+                dataPoints: chartData.dataPoints,
+                unit: "%",
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            onClick: (event, activeElements) => {
+              if (activeElements.length > 0) {
+                const datasetIndex = activeElements[0].datasetIndex;
+                const index = activeElements[0].index;
+                const chart = charts[canvasId];
+                const dataset = chart.data.datasets[datasetIndex];
+                const labelText = chart.data.labels[index];
+                const value = dataset.data[index];
+                const dataPoint = dataset.dataPoints
+                  ? dataset.dataPoints[index]
+                  : null;
+
+                showChartPopup(label, labelText, value, dataPoint, "%");
+              }
+            },
+            plugins: {
+              legend: {
+                labels: {
+                  font: { family: "Prompt" },
+                },
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 100,
+                ticks: {
+                  font: { family: "Prompt" },
+                  callback: function (value) {
+                    return value + "%";
+                  },
+                },
+              },
+              x: {
+                ticks: {
+                  font: { family: "Prompt" },
+                },
+              },
+            },
+          },
+        };
+
+        // Add line-specific options
+        if (currentChartType === "line") {
+          chartConfig.data.datasets[0].tension = 0.4;
+          chartConfig.data.datasets[0].fill = true;
+          chartConfig.data.datasets[0].pointBackgroundColor = color.border;
+          chartConfig.data.datasets[0].pointBorderColor = "#ffffff";
+          chartConfig.data.datasets[0].pointBorderWidth = 2;
+          chartConfig.data.datasets[0].pointRadius = 5;
+        }
+
+        charts[canvasId] = new Chart(ctx, chartConfig);
+      }
+
+      function createNumberChart(canvasId, data, label) {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+
+        const chartData = prepareChartData(data);
+        const colorIndex = Object.keys(charts).length % chartColors.length;
+        const color = getChartColor(colorIndex);
+
+        // Choose chart type based on year filter and user selection
+        const currentChartType = selectedYear === "all" ? chartType : "bar";
+
+        const chartConfig = {
+          type: currentChartType,
+          data: {
+            labels: chartData.labels,
+            datasets: [
+              {
+                label: label,
+                data: chartData.values,
+                borderColor: color.border,
+                backgroundColor:
+                  currentChartType === "bar" ? color.border : color.bg,
+                borderWidth: currentChartType === "bar" ? 1 : 2,
+                dataPoints: chartData.dataPoints,
+                unit: "",
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            onClick: (event, activeElements) => {
+              if (activeElements.length > 0) {
+                const datasetIndex = activeElements[0].datasetIndex;
+                const index = activeElements[0].index;
+                const chart = charts[canvasId];
+                const dataset = chart.data.datasets[datasetIndex];
+                const labelText = chart.data.labels[index];
+                const value = dataset.data[index];
+                const dataPoint = dataset.dataPoints
+                  ? dataset.dataPoints[index]
+                  : null;
+
+                showChartPopup(label, labelText, value, dataPoint, "");
+              }
+            },
+            plugins: {
+              legend: {
+                labels: {
+                  font: { family: "Prompt" },
+                },
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  font: { family: "Prompt" },
+                  callback: function (value) {
+                    return value.toLocaleString("th-TH");
+                  },
+                },
+              },
+              x: {
+                ticks: {
+                  font: { family: "Prompt" },
+                },
+              },
+            },
+          },
+        };
+
+        // Add line-specific options
+        if (currentChartType === "line") {
+          chartConfig.data.datasets[0].tension = 0.4;
+          chartConfig.data.datasets[0].fill = true;
+          chartConfig.data.datasets[0].pointBackgroundColor = color.border;
+          chartConfig.data.datasets[0].pointBorderColor = "#ffffff";
+          chartConfig.data.datasets[0].pointBorderWidth = 2;
+          chartConfig.data.datasets[0].pointRadius = 5;
+        }
+
+        charts[canvasId] = new Chart(ctx, chartConfig);
+      }
+
+      function createBarChart(canvasId, data, label) {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+
+        const chartData = prepareChartData(data);
+        const colorIndex = Object.keys(charts).length % chartColors.length;
+        const color = getChartColor(colorIndex);
+
+        charts[canvasId] = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: chartData.labels,
+            datasets: [
+              {
+                label: label,
+                data: chartData.values,
+                backgroundColor: color.border,
+                borderColor: color.border,
+                borderWidth: 1,
+                dataPoints: chartData.dataPoints,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            onClick: (event, activeElements) => {
+              if (activeElements.length > 0) {
+                const datasetIndex = activeElements[0].datasetIndex;
+                const index = activeElements[0].index;
+                const chart = charts[canvasId];
+                const dataset = chart.data.datasets[datasetIndex];
+                const labelText = chart.data.labels[index];
+                const value = dataset.data[index];
+                const dataPoint = dataset.dataPoints
+                  ? dataset.dataPoints[index]
+                  : null;
+
+                showChartPopup(label, labelText, value, dataPoint);
+              }
+            },
+            plugins: {
+              legend: {
+                labels: {
+                  font: { family: "Prompt" },
+                },
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  font: { family: "Prompt" },
+                  callback: function (value) {
+                    return value.toLocaleString("th-TH");
+                  },
+                },
+              },
+              x: {
+                ticks: {
+                  font: { family: "Prompt" },
+                },
+              },
+            },
+          },
+        });
+      }
+
+      function createPieChart(canvasId, data) {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+
+        const chartData = prepareChartData(data);
+        const colors = chartColors.map((c) => c.border);
+
+        charts[canvasId] = new Chart(ctx, {
+          type: "pie",
+          data: {
+            labels: chartData.labels,
+            datasets: [
+              {
+                data: chartData.values,
+                backgroundColor: colors,
+                dataPoints: chartData.dataPoints,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            onClick: (event, activeElements) => {
+              if (activeElements.length > 0) {
+                const datasetIndex = activeElements[0].datasetIndex;
+                const index = activeElements[0].index;
+                const chart = charts[canvasId];
+                const dataset = chart.data.datasets[datasetIndex];
+                const labelText = chart.data.labels[index];
+                const value = dataset.data[index];
+                const dataPoint = dataset.dataPoints
+                  ? dataset.dataPoints[index]
+                  : null;
+
+                showChartPopup("รายละเอียด", labelText, value, dataPoint);
+              }
+            },
+            plugins: {
+              legend: {
+                position: "bottom",
+                labels: {
+                  font: { family: "Prompt" },
+                },
+              },
+            },
+          },
+        });
+      }
+
+      function createReceivablesPieChart(canvasId, receivablesData) {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+
+        // Get data from percentage column
+        const categories = [
+          "นอกต้นสังกัด",
+          "UC",
+          "ปกส",
+          "ข้าราชการ/อปท/รัฐวิสาหกิจ",
+          "อื่นๆ",
+        ];
+        const subcategoryMap = {
+          นอกต้นสังกัด: "ลูกหนี้-นอกต้นสังกัด",
+          UC: "ลูกหนี้-UC",
+          ปกส: "ลูกหนี้-ปกส",
+          "ข้าราชการ/อปท/รัฐวิสาหกิจ": "ลูกหนี้-ข้าราชการ/อปท/รัฐวิสาหกิจ",
+          อื่นๆ: "ลูกหนี้-อื่นๆ",
+        };
+
+        const filteredData = getFilteredData().filter(
+          (d) =>
+            d.category === "current" &&
+            Object.values(subcategoryMap).includes(d.subcategory)
+        );
+
+        if (filteredData.length === 0) {
+          charts[canvasId] = new Chart(ctx, {
+            type: "pie",
+            data: {
+              labels: ["ไม่มีข้อมูล"],
+              datasets: [
+                {
+                  data: [1],
+                  backgroundColor: ["#e5e7eb"],
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: "bottom",
+                  labels: { font: { family: "Prompt" } },
+                },
+              },
+            },
+          });
+          return;
+        }
+
+        // Use percentage values from data
+        const percentages = {};
+        const amounts = {};
+        const categoryNames = [];
+
+        categories.forEach((cat) => {
+          const subcategory = subcategoryMap[cat];
+          const records = filteredData.filter(
+            (d) => d.subcategory === subcategory
+          );
+
+          // Get the latest record for each category
+          if (records.length > 0) {
+            const latestRecord = records[records.length - 1];
+            percentages[cat] = latestRecord.percentage || 0;
+            amounts[cat] = latestRecord.amount || 0;
+          }
+        });
+
+        const labels = [];
+        const values = [];
+        const amountValues = [];
+        const rawCategoryNames = [];
+
+        categories.forEach((cat) => {
+          if (percentages[cat] > 0) {
+            labels.push(`${cat} (${Number(percentages[cat]).toFixed(1)}%)`);
+            values.push(percentages[cat]);
+            amountValues.push(amounts[cat]);
+            rawCategoryNames.push(cat);
+          }
+        });
+
+        if (values.length === 0) {
+          labels.push("ไม่มีข้อมูล");
+          values.push(1);
+          amountValues.push(0);
+          rawCategoryNames.push("ไม่มีข้อมูล");
+        }
+
+        const colors = chartColors.map((c) => c.border);
+
+        charts[canvasId] = new Chart(ctx, {
+          type: "pie",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                data: values,
+                backgroundColor: colors,
+                amounts: amountValues,
+                categoryNames: rawCategoryNames,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            onClick: (event, activeElements) => {
+              if (activeElements.length > 0) {
+                const index = activeElements[0].index;
+                const chart = charts[canvasId];
+                const dataset = chart.data.datasets[0];
+                const categoryName = dataset.categoryNames[index];
+                const percentage = dataset.data[index];
+                const amount = dataset.amounts[index];
+
+                showReceivablePopup(categoryName, percentage, amount);
+              }
+            },
+            plugins: {
+              legend: {
+                position: "bottom",
+                labels: {
+                  font: { family: "Prompt" },
+                  padding: 15,
+                },
+              },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    const label = context.label || "";
+                    const percentage = context.parsed || 0;
+                    const amount =
+                      context.dataset.amounts[context.dataIndex] || 0;
+                    return [
+                      `${label}`,
+                      `จำนวนเงิน: ${amount.toLocaleString("th-TH", {
+                        minimumFractionDigits: 2,
+                      })} บาท`,
+                    ];
+                  },
+                },
+              },
+            },
+          },
+        });
+      }
+
+      function showReceivablePopup(categoryName, percentage, amount) {
+        const overlay = document.getElementById("chart-popup-overlay");
+        const popupTitle = document.getElementById("popup-title");
+        const popupContent = document.getElementById("popup-content");
+
+        popupTitle.textContent = "ลูกหนี้แยกตามสิทธิ";
+
+        const contentHTML = `
+                <div class="chart-popup-row">
+                    <span class="chart-popup-label">ประเภทสิทธิ:</span>
+                    <span class="chart-popup-value">${categoryName}</span>
+                </div>
+                <div class="chart-popup-row">
+                    <span class="chart-popup-label">เปอร์เซ็นต์:</span>
+                    <span class="chart-popup-value">${Number(
+                      percentage
+                    ).toFixed(2)}%</span>
+                </div>
+                <div class="chart-popup-row">
+                    <span class="chart-popup-label">จำนวนเงิน:</span>
+                    <span class="chart-popup-value">${Number(
+                      amount
+                    ).toLocaleString("th-TH", {
+                      minimumFractionDigits: 2,
+                    })} บาท</span>
+                </div>
+            `;
+
+        popupContent.innerHTML = contentHTML;
+        overlay.classList.add("show");
+      }
+
+      function createDepartmentRightsChart(canvasId, rightsData, label) {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+
+        // Get data from rights-summary category with department field
+        const filteredData = getFilteredData();
+        const departments = ["ทันตกรรม", "แผนไทย", "กายภาพ"];
+        const departmentNames = {
+          ทันตกรรม: "ทันตกรรม",
+          แผนไทย: "แผนไทย",
+          กายภาพ: "กายภาพ",
+        };
+
+        // Extract rights type from label
+        let rightsType = "";
+        if (label.includes("UC")) rightsType = "รวมรายได้เรียกเก็บหมวด UC";
+        else if (label.includes("ข้าราชการ"))
+          rightsType = "รวมรายได้เรียกเก็บหมวด ข้าราชการ";
+        else if (label.includes("อปท"))
+          rightsType = "รวมรายได้เรียกเก็บหมวด อปท.";
+        else if (label.includes("ปกส"))
+          rightsType = "รวมรายได้เรียกเก็บหมวด ปกส.";
+        else if (label.includes("พรบ"))
+          rightsType = "รวมรายได้เรียกเก็บหมวด พรบ.";
+
+        // Get data for each department from rights-summary category
+        const departmentData = {};
+        departments.forEach((dept) => {
+          departmentData[dept] = filteredData.filter(
+            (d) =>
+              d.category === "rights-summary" &&
+              d.subcategory === rightsType &&
+              d.department === dept
+          );
+        });
+
+        // Get all unique years
+        const allYears = [
+          ...new Set(
+            Object.values(departmentData)
+              .flat()
+              .map((d) => d.year)
+              .filter((y) => y)
+          ),
+        ].sort();
+
+        if (allYears.length === 0) {
+          // Show empty chart
+          charts[canvasId] = new Chart(ctx, {
+            type: "line",
+            data: {
+              labels: ["ไม่มีข้อมูล"],
+              datasets: [
+                {
+                  label: "ไม่มีข้อมูล",
+                  data: [0],
+                  borderColor: "#e5e7eb",
+                  backgroundColor: "transparent",
+                  fill: false,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { labels: { font: { family: "Prompt" } } },
+              },
+              scales: {
+                y: { beginAtZero: true, ticks: { font: { family: "Prompt" } } },
+                x: { ticks: { font: { family: "Prompt" } } },
+              },
+            },
+          });
+          return;
+        }
+
+        // Create datasets for each department
+        const datasets = [];
+        const colors = ["#3b82f6", "#10b981", "#f59e0b"]; // Blue, Green, Orange
+
+        // Choose chart type based on year filter and user selection
+        const currentChartType = selectedYear === "all" ? chartType : "bar";
+
+        departments.forEach((dept, index) => {
+          const deptData = departmentData[dept];
+
+          if (deptData.length > 0) {
+            // Create data array matching the years
+            const values = allYears.map((year) => {
+              const record = deptData.find((d) => d.year === year);
+              return record ? record.amount : null;
+            });
+
+            const dataset = {
+              label: departmentNames[dept],
+              data: values,
+              borderColor: colors[index],
+              backgroundColor:
+                currentChartType === "bar" ? colors[index] : "transparent",
+              borderWidth: currentChartType === "bar" ? 1 : 3,
+              spanGaps: false,
+              fill: false,
+              departmentData: deptData,
+            };
+
+            // Add line-specific properties
+            if (currentChartType === "line") {
+              dataset.tension = 0.4;
+              dataset.pointBackgroundColor = colors[index];
+              dataset.pointBorderColor = "#ffffff";
+              dataset.pointBorderWidth = 2;
+              dataset.pointRadius = 6;
+              dataset.pointHoverRadius = 8;
+            }
+
+            datasets.push(dataset);
+          }
+        });
+
+        if (datasets.length === 0) {
+          // No data found, show empty chart
+          charts[canvasId] = new Chart(ctx, {
+            type: "line",
+            data: {
+              labels: ["ไม่มีข้อมูล"],
+              datasets: [
+                {
+                  label: "ไม่มีข้อมูล",
+                  data: [0],
+                  borderColor: "#e5e7eb",
+                  backgroundColor: "transparent",
+                  fill: false,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { labels: { font: { family: "Prompt" } } },
+              },
+              scales: {
+                y: { beginAtZero: true, ticks: { font: { family: "Prompt" } } },
+                x: { ticks: { font: { family: "Prompt" } } },
+              },
+            },
+          });
+          return;
+        }
+
+        charts[canvasId] = new Chart(ctx, {
+          type: currentChartType,
+          data: {
+            labels: allYears,
+            datasets: datasets,
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            onClick: (event, activeElements) => {
+              if (activeElements.length > 0) {
+                const datasetIndex = activeElements[0].datasetIndex;
+                const index = activeElements[0].index;
+                const chart = charts[canvasId];
+                const dataset = chart.data.datasets[datasetIndex];
+                const year = chart.data.labels[index];
+                const value = dataset.data[index];
+                const departmentName = dataset.label;
+
+                if (value !== null) {
+                  showDepartmentRightsPopup(label, departmentName, year, value);
+                }
+              }
+            },
+            plugins: {
+              legend: {
+                labels: {
+                  font: { family: "Prompt" },
+                },
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  font: { family: "Prompt" },
+                  callback: function (value) {
+                    return value.toLocaleString("th-TH");
+                  },
+                },
+              },
+              x: {
+                ticks: {
+                  font: { family: "Prompt" },
+                },
+              },
+            },
+          },
+        });
+      }
+
+      function createMultiLineChart(canvasId, ratiosData) {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+
+        // Check if we have actual data
+        if (!ratiosData || ratiosData.length === 0) {
+          // Show empty chart with message
+          charts[canvasId] = new Chart(ctx, {
+            type: "line",
+            data: {
+              labels: ["ไม่มีข้อมูล"],
+              datasets: [
+                {
+                  label: "ไม่มีข้อมูล",
+                  data: [0],
+                  borderColor: "#e5e7eb",
+                  backgroundColor: "transparent",
+                  fill: false,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  labels: { font: { family: "Prompt" } },
+                },
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: { font: { family: "Prompt" } },
+                },
+                x: {
+                  ticks: { font: { family: "Prompt" } },
+                },
+              },
+            },
+          });
+          return;
+        }
+
+        // Group data by subcategory (ratio type)
+        const ratioTypes = ["Current Ratio", "Quick Ratio", "Cash Ratio"];
+        const datasets = [];
+        const colors = ["#3b82f6", "#10b981", "#f59e0b"];
+
+        // Choose chart type based on year filter and user selection
+        const currentChartType = selectedYear === "all" ? chartType : "bar";
+        const years = [...new Set(ratiosData.map((d) => d.year))].sort();
+
+        ratioTypes.forEach((ratioType, index) => {
+          const ratioData = ratiosData.filter(
+            (d) => d.subcategory === ratioType
+          );
+
+          if (ratioData.length > 0) {
+            // Create data array matching the years
+            const values = years.map((year) => {
+              const record = ratioData.find((d) => d.year === year);
+              return record ? record.amount : null;
+            });
+
+            const dataset = {
+              label: ratioType,
+              data: values,
+              borderColor: colors[index],
+              backgroundColor:
+                currentChartType === "bar" ? colors[index] : "transparent",
+              borderWidth: currentChartType === "bar" ? 1 : 3,
+              spanGaps: false, // Don't connect points when data is missing
+              fill: false, // ไม่มีพื้นทึบด้านล่าง
+            };
+
+            // Add line-specific properties
+            if (currentChartType === "line") {
+              dataset.tension = 0.4;
+              dataset.pointBackgroundColor = colors[index];
+              dataset.pointBorderColor = "#ffffff";
+              dataset.pointBorderWidth = 2;
+              dataset.pointRadius = 6;
+              dataset.pointHoverRadius = 8;
+            }
+
+            datasets.push(dataset);
+          }
+        });
+
+        if (datasets.length === 0) {
+          // No data found, show empty chart
+          charts[canvasId] = new Chart(ctx, {
+            type: "line",
+            data: {
+              labels: ["ไม่มีข้อมูล"],
+              datasets: [
+                {
+                  label: "ไม่มีข้อมูล",
+                  data: [0],
+                  borderColor: "#e5e7eb",
+                  backgroundColor: "transparent",
+                  fill: false,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  labels: { font: { family: "Prompt" } },
+                },
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: { font: { family: "Prompt" } },
+                },
+                x: {
+                  ticks: { font: { family: "Prompt" } },
+                },
+              },
+            },
+          });
+          return;
+        }
+
+        charts[canvasId] = new Chart(ctx, {
+          type: currentChartType,
+          data: {
+            labels: years,
+            datasets: datasets,
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            onClick: (event, activeElements) => {
+              if (activeElements.length > 0) {
+                const datasetIndex = activeElements[0].datasetIndex;
+                const index = activeElements[0].index;
+                const chart = charts[canvasId];
+                const dataset = chart.data.datasets[datasetIndex];
+                const labelText = chart.data.labels[index];
+                const value = dataset.data[index];
+                const ratioName = dataset.label;
+
+                if (value !== null) {
+                  showRatioPopup(ratioName, labelText, value);
+                }
+              }
+            },
+            plugins: {
+              legend: {
+                labels: {
+                  font: { family: "Prompt" },
+                },
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  font: { family: "Prompt" },
+                },
+              },
+              x: {
+                ticks: {
+                  font: { family: "Prompt" },
+                },
+              },
+            },
+          },
+        });
+      }
+
+      function destroyAllCharts() {
+        Object.values(charts).forEach((chart) => {
+          if (chart) chart.destroy();
+        });
+        charts = {};
+      }
+
+      // Data filtering functions
+      function filterDataByCategory(category) {
+        const filteredData = getFilteredData();
+        const filtered = filteredData.filter((d) => d.category === category);
+
+        // Return empty structure if no data
+        if (filtered.length === 0) {
+          return createEmptyDataStructure(category);
+        }
+
+        // Process data based on category
+        return processDataByCategory(filtered, category);
+      }
+
+      function filterDataByDepartment(department) {
+        const filteredData = getFilteredData();
+        const filtered = filteredData.filter((d) => d.category === department);
+
+        return {
+          revenue: filtered.filter((d) => d.subcategory === "รายได้รวม"),
+          uc: filtered.filter((d) => d.subcategory === "รายได้-UC"),
+          gov: filtered.filter((d) => d.subcategory === "รายได้-ข้าราชการ"),
+          local: filtered.filter((d) => d.subcategory === "รายได้-อปท"),
+          social: filtered.filter((d) => d.subcategory === "รายได้-ปกส"),
+          other: filtered.filter((d) => d.subcategory === "รายได้-อื่นๆ"),
+        };
+      }
+
+      function createEmptyDataStructure(category) {
+        const empty = { labels: [], values: [] };
+
+        switch (category) {
+          case "current":
+            return { balance: empty, debt: empty, receivables: empty };
+          case "yearly-overview":
+            return {
+              balance: empty,
+              payables: empty,
+              receivables: empty,
+              net: empty,
+              ratios: empty,
+              workingCapital: empty,
+              netIncome: empty,
+            };
+          case "yearly-income":
+            return {
+              uc: empty,
+              ucCash: empty,
+              ucClaim: empty,
+              gov: empty,
+              state: empty,
+              local: empty,
+              self: empty,
+              accident: empty,
+              other: empty,
+              cf: empty,
+            };
+          case "yearly-expenses":
+            return {
+              personnel: empty,
+              medicine: empty,
+              medical: empty,
+              lab: empty,
+              utility: empty,
+              general: empty,
+              project: empty,
+            };
+          default:
+            return empty;
+        }
+      }
+
+      function processDataByCategory(data, category) {
+        switch (category) {
+          case "current":
+            return {
+              balance: data.filter((d) => d.subcategory === "เงินบำรุงคงเหลือ"),
+              debt: data.filter((d) => d.subcategory === "ภาระหนี้สิน"),
+              receivables: [
+                {
+                  subcategory: "นอกต้นสังกัด",
+                  data: data.filter(
+                    (d) => d.subcategory === "ลูกหนี้-นอกต้นสังกัด"
+                  ),
+                },
+                {
+                  subcategory: "UC",
+                  data: data.filter((d) => d.subcategory === "ลูกหนี้-UC"),
+                },
+                {
+                  subcategory: "ปกส",
+                  data: data.filter((d) => d.subcategory === "ลูกหนี้-ปกส"),
+                },
+                {
+                  subcategory: "ข้าราชการ/อปท/รัฐวิสาหกิจ",
+                  data: data.filter(
+                    (d) => d.subcategory === "ลูกหนี้-ข้าราชการ/อปท/รัฐวิสาหกิจ"
+                  ),
+                },
+                {
+                  subcategory: "อื่นๆ",
+                  data: data.filter((d) => d.subcategory === "ลูกหนี้-อื่นๆ"),
+                },
+              ],
+            };
+          case "yearly-overview":
+            return {
+              balance: data.filter((d) => d.subcategory === "เงินบำรุงคงเหลือ"),
+              payables: data.filter((d) => d.subcategory === "เจ้าหนี้"),
+              receivables: data.filter((d) => d.subcategory === "ลูกหนี้"),
+              net: data.filter((d) => d.subcategory === "เงินบำรุงหักหนี้สิน"),
+              ratios: data.filter((d) =>
+                ["Current Ratio", "Quick Ratio", "Cash Ratio"].includes(
+                  d.subcategory
+                )
+              ),
+              workingCapital: data.filter(
+                (d) => d.subcategory === "Net Working Capital"
+              ),
+              netIncome: data.filter((d) => d.subcategory === "NET INCOME"),
+            };
+          case "yearly-income":
+            return {
+              uc: data.filter((d) => d.subcategory === "รวมรายรับสิทธิ UC"),
+              ucCash: data.filter((d) => d.subcategory === "เงิน UC"),
+              ucClaim: data.filter((d) => d.subcategory === "สิทธิ UC ตามจ่าย"),
+              gov: data.filter((d) => d.subcategory === "รวมรายรับข้าราชการ"),
+              state: data.filter(
+                (d) => d.subcategory === "รวมรายรับรัฐวิสาหกิจ"
+              ),
+              local: data.filter((d) => d.subcategory === "รวมรายรับ อปท."),
+              self: data.filter(
+                (d) => d.subcategory === "รวมรายรับชำระเงินเอง"
+              ),
+              accident: data.filter((d) => d.subcategory === "รวมรายรับ พรบ."),
+              other: data.filter(
+                (d) =>
+                  d.subcategory ===
+                  "รายรับอื่นๆ : ตรวจสุขภาพ/ต่างด้าว/อุดหนุน LP"
+              ),
+              cf: data.filter((d) => d.subcategory === "รายรับจากเงิน CF"),
+            };
+          case "yearly-expenses":
+            return {
+              personnel: data.filter((d) => d.subcategory === "รายจ่ายบุคลากร"),
+              medicine: data.filter((d) => d.subcategory === "รายจ่ายค่ายา"),
+              medical: data.filter(
+                (d) => d.subcategory === "รายจ่ายวัสดุการแพทย์"
+              ),
+              lab: data.filter((d) => d.subcategory === "รายจ่าย Lab"),
+              utility: data.filter((d) => d.subcategory === "รายจ่ายค่าใช้สอย"),
+              general: data.filter(
+                (d) => d.subcategory === "รายจ่ายวัสดุทั่วไป"
+              ),
+              project: data.filter((d) => d.subcategory === "รายจ่ายโครงการ"),
+            };
+          case "rights-summary":
+            return {
+              uc: data.filter(
+                (d) => d.subcategory === "รวมรายได้เรียกเก็บหมวด UC"
+              ),
+              gov: data.filter(
+                (d) => d.subcategory === "รวมรายได้เรียกเก็บหมวด ข้าราชการ"
+              ),
+              local: data.filter(
+                (d) => d.subcategory === "รวมรายได้เรียกเก็บหมวด อปท."
+              ),
+              social: data.filter(
+                (d) => d.subcategory === "รวมรายได้เรียกเก็บหมวด ปกส."
+              ),
+              accident: data.filter(
+                (d) => d.subcategory === "รวมรายได้เรียกเก็บหมวด พรบ."
+              ),
+            };
+          case "opd":
+            return {
+              revenue: data.filter((d) => d.subcategory === "รายได้ OPD"),
+            };
+          case "ipd":
+            return {
+              revenue: data.filter(
+                (d) =>
+                  d.subcategory === "รายได้ IPD (บาท)" ||
+                  d.subcategory === "รายได้ IPD"
+              ),
+              bed: data.filter(
+                (d) =>
+                  d.subcategory === "อัตราครองเตียง (%)" ||
+                  d.subcategory === "อัตราครองเตียง"
+              ),
+              admit: data.filter(
+                (d) =>
+                  d.subcategory === "ยอดรวม Admit (ราย)" ||
+                  d.subcategory === "ยอดรวม Admit"
+              ),
+              rw: data.filter((d) => d.subcategory === "Sum Adj RW"),
+            };
+          case "primary-care":
+            return {
+              anc: data.filter((d) => d.subcategory === "ANC"),
+              pnc: data.filter((d) => d.subcategory === "PNC"),
+              fp: data.filter((d) => d.subcategory === "FP"),
+              cervical: data.filter(
+                (d) => d.subcategory === "คัดกรองมะเร็งปากมดลูก"
+              ),
+              tb: data.filter((d) => d.subcategory === "คัดกรองวัณโรค"),
+              flu: data.filter((d) => d.subcategory === "ฉีดวัคซีนไข้หวัดใหญ่"),
+              healthCheck: data.filter(
+                (d) => d.subcategory === "ออกตรวจสุขภาพราชการ"
+              ),
+            };
+          case "accident":
+            return {
+              revenue: data.filter((d) => d.subcategory === "รายได้ พรบ."),
+            };
+          default:
+            return data;
+        }
+      }
+
+      function prepareChartData(data) {
+        if (!Array.isArray(data)) {
+          return { labels: [], values: [], dataPoints: [] };
+        }
+
+        if (data.length === 0) {
+          return { labels: ["ไม่มีข้อมูล"], values: [0], dataPoints: [null] };
+        }
+
+        // Sort by year and month
+        const sorted = data.sort((a, b) => {
+          if (a.year !== b.year) return a.year - b.year;
+          return (a.month || "00") - (b.month || "00");
+        });
+
+        const labels = sorted.map((d) => {
+          if (d.month) {
+            return `${getMonthName(d.month)} ${d.year}`;
+          }
+          return d.year;
+        });
+
+        const values = sorted.map((d) => d.amount);
+        const dataPoints = sorted.map((d) => d);
+
+        return { labels, values, dataPoints };
+      }
+
+      // Utility functions
+      function showToast(message, type = "success") {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.className = `toast show ${type}`;
+
+        setTimeout(() => {
+          toast.classList.remove("show");
+        }, 3000);
+      }
+
+      function getCategoryName(category) {
+        const names = {
+          current: "สถานการณ์ปัจจุบัน",
+          "yearly-overview": "Overview ประจำปี",
+          "yearly-income": "รายรับประจำปี",
+          "yearly-expenses": "รายจ่ายประจำปี",
+          dental: "ทันตกรรม",
+          "thai-medicine": "แผนไทย",
+          "physical-therapy": "กายภาพ",
+          "rights-summary": "สรุปรายได้แยกตามสิทธิ",
+          opd: "OPD",
+          ipd: "IPD",
+          "primary-care": "ปฐมภูมิ",
+          accident: "พรบ.",
+        };
+        return names[category] || category;
+      }
+
+      function getMonthName(month) {
+        const months = {
+          "01": "ม.ค.",
+          "02": "ก.พ.",
+          "03": "มี.ค.",
+          "04": "เม.ย.",
+          "05": "พ.ค.",
+          "06": "มิ.ย.",
+          "07": "ก.ค.",
+          "08": "ส.ค.",
+          "09": "ก.ย.",
+          10: "ต.ค.",
+          11: "พ.ย.",
+          12: "ธ.ค.",
+        };
+        return months[month] || month;
+      }
+
+      // Initialize app
+      initializeApp();
+
+      // Show current overview on page load
+      renderCurrentSection();
+
+      // Initialize chart type toggle
+      updateChartTypeToggle();
+    </script>
+    <script>
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'99fc5cb362808963',t:'MTc2MzM1MjQ1Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
+        }
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
+        }
+      })();
+    </script>
+  </body>
+</html>
