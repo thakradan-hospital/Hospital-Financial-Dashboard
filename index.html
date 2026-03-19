@@ -728,11 +728,7 @@
               </p>
             </div>
             <div style="display: flex; gap: 15px; align-items: flex-end">
-              <div
-                class="form-group"
-                id="year-filter-wrapper"
-                style="margin: 0; min-width: 150px"
-              >
+              <div class="form-group" style="margin: 0; min-width: 150px">
                 <label for="year-filter" style="margin-bottom: 5px"
                   >เลือกปี</label
                 >
@@ -820,13 +816,13 @@
 
       // Firebase configuration (ของคุณ)
       const firebaseConfig = {
-        apiKey: "AIzaSyAiaP4jlbPyi7OrkLthIBpbkYaA3520bZA",
-        authDomain: "hospital-financial-dashboard.firebaseapp.com",
-        projectId: "hospital-financial-dashboard",
-        storageBucket: "hospital-financial-dashboard.firebasestorage.app",
-        messagingSenderId: "741215939395",
-        appId: "1:741215939395:web:f18cc02953a38953951df6",
-      };
+  apiKey: "AIzaSyAiaP4jlbPyi7OrkLthIBpbkYaA3520bZA",
+  authDomain: "hospital-financial-dashboard.firebaseapp.com",
+  projectId: "hospital-financial-dashboard",
+  storageBucket: "hospital-financial-dashboard.firebasestorage.app",
+  messagingSenderId: "741215939395",
+  appId: "1:741215939395:web:f18cc02953a38953951df6"
+};
 
       // Initialize Firebase
       const app = initializeApp(firebaseConfig);
@@ -909,17 +905,21 @@
       // Update chart type toggle visibility
       function updateChartTypeToggle() {
         const toggle = document.getElementById("chart-type-toggle");
-
-        // ✅ แสดงเสมอ (ทั้งทุกปี และ ปีเดียว)
-        toggle.style.display = "block";
+        if (selectedYear === "all") {
+          toggle.style.display = "block";
+        } else {
+          toggle.style.display = "none";
+          chartType = "bar"; // Force bar chart for specific year
+        }
       }
 
       // Toggle chart type
       function toggleChartType() {
+        if (selectedYear !== "all") return; // Only allow toggle when showing all years
+
         chartType = chartType === "line" ? "bar" : "line";
 
         const btn = document.getElementById("chart-type-btn");
-
         if (chartType === "line") {
           btn.innerHTML = "📈 เส้น";
           btn.style.background = "white";
@@ -938,10 +938,7 @@
         if (selectedYear === "all") {
           return allData;
         }
-
-        const yearNum = Number(selectedYear);
-
-        return allData.filter((d) => Number(d.year) === yearNum);
+        return allData.filter((d) => d.year === selectedYear);
       }
 
       // Initialize SDKs
@@ -1132,7 +1129,6 @@
           section.desc;
 
         const contentArea = document.getElementById("content-area");
-        updateYearFilterVisibility(); // ✅ เพิ่มบรรทัดนี้
 
         switch (currentSection) {
           case "current-overview":
@@ -1181,116 +1177,92 @@
       function renderCurrentOverview(container) {
         const monthlyData = filterDataByCategory("current");
 
-        // ✅ ใช้เฉพาะ 12 เดือนล่าสุด
-        const last12Months = {
-          balance: getLast12Months(monthlyData.balance),
-          debt: getLast12Months(monthlyData.debt),
-          receivables: monthlyData.receivables, // pie chart ไม่ต้องจำกัด
-        };
-
         container.innerHTML = `
-    <div class="chart-grid">
-      <div class="chart-container">
-        <h3>เงินบำรุงคงเหลือแต่ละเดือน (12 เดือนล่าสุด)</h3>
-        <div class="chart-wrapper">
-          <canvas id="chart-current-balance"></canvas>
-        </div>
-      </div>
-
-      <div class="chart-container">
-        <h3>ภาระหนี้สินแต่ละเดือน (12 เดือนล่าสุด)</h3>
-        <div class="chart-wrapper">
-          <canvas id="chart-current-debt"></canvas>
-        </div>
-      </div>
-
-      <div class="chart-container">
-        <h3>ลูกหนี้แยกตามสิทธิ</h3>
-        <div class="chart-wrapper">
-          <canvas id="chart-current-receivables"></canvas>
-        </div>
-      </div>
-    </div>
-  `;
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <h3>เงินบำรุงคงเหลือแต่ละเดือน</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-current-balance"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>ภาระหนี้สินแต่ละเดือน</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-current-debt"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>ลูกหนี้แยกตามสิทธิ</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-current-receivables"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
 
         setTimeout(() => {
           createLineChart(
             "chart-current-balance",
-            last12Months.balance,
+            monthlyData.balance,
             "เงินบำรุง"
           );
-
-          createLineChart("chart-current-debt", last12Months.debt, "หนี้สิน");
-
+          createLineChart("chart-current-debt", monthlyData.debt, "หนี้สิน");
           createReceivablesPieChart(
             "chart-current-receivables",
-            last12Months.receivables
+            monthlyData.receivables
           );
         }, 100);
       }
 
       function renderYearlyOverview(container) {
-        // ✅ ใช้ฟังก์ชันกลางตัวเดียว
-        const yearlyData = getYearlyOverviewData();
+        const yearlyData = filterDataByCategory("yearly-overview");
 
         container.innerHTML = `
-    <div class="chart-grid">
-      <div class="chart-container">
-        <h3>เงินบำรุงคงเหลือ${
-          selectedYear === "all" ? "แต่ละปี" : "แต่ละเดือน"
-        }</h3>
-        <div class="chart-wrapper">
-          <canvas id="chart-yearly-balance"></canvas>
-        </div>
-      </div>
-
-      <div class="chart-container">
-        <h3>ภาระหนี้สินเจ้าหนี้${
-          selectedYear === "all" ? "แต่ละปี" : "แต่ละเดือน"
-        }</h3>
-        <div class="chart-wrapper">
-          <canvas id="chart-yearly-payables"></canvas>
-        </div>
-      </div>
-
-      <div class="chart-container">
-        <h3>ภาระหนี้สินลูกหนี้${
-          selectedYear === "all" ? "แต่ละปี" : "แต่ละเดือน"
-        }</h3>
-        <div class="chart-wrapper">
-          <canvas id="chart-yearly-receivables"></canvas>
-        </div>
-      </div>
-
-      <div class="chart-container">
-        <h3>เงินบำรุงหักหนี้สิน</h3>
-        <div class="chart-wrapper">
-          <canvas id="chart-yearly-net"></canvas>
-        </div>
-      </div>
-
-      <div class="chart-container">
-        <h3>อัตราส่วนทางการเงิน</h3>
-        <div class="chart-wrapper">
-          <canvas id="chart-yearly-ratios"></canvas>
-        </div>
-      </div>
-
-      <div class="chart-container">
-        <h3>Net Working Capital</h3>
-        <div class="chart-wrapper">
-          <canvas id="chart-yearly-working-capital"></canvas>
-        </div>
-      </div>
-
-      <div class="chart-container">
-        <h3>NET INCOME</h3>
-        <div class="chart-wrapper">
-          <canvas id="chart-yearly-net-income"></canvas>
-        </div>
-      </div>
-    </div>
-  `;
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <h3>เงินบำรุงคงเหลือแต่ละปี</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-yearly-balance"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>ภาระหนี้สินเจ้าหนี้แต่ละปี</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-yearly-payables"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>ภาระหนี้สินลูกหนี้แต่ละปี</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-yearly-receivables"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>เงินบำรุงหักหนี้สิน</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-yearly-net"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>อัตราส่วนทางการเงิน</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-yearly-ratios"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Net Working Capital</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-yearly-working-capital"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>NET INCOME</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-yearly-net-income"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
 
         setTimeout(() => {
           createLineChart(
@@ -1324,104 +1296,96 @@
       }
 
       function renderYearlyIncome(container) {
-        const incomeData = getYearlyIncomeData();
+        const incomeData = filterDataByCategory("yearly-income");
 
         container.innerHTML = `
-    <div class="chart-grid">
-      <div class="chart-container">
-        <h3>รวมรายรับสิทธิ UC</h3>
-        <div class="chart-wrapper">
-          <canvas id="chart-income-uc"></canvas>
-        </div>
-      </div>
-
-      <div class="chart-container">
-        <h3>เงิน UC</h3>
-        <div class="chart-wrapper">
-          <canvas id="chart-income-uc-cash"></canvas>
-        </div>
-      </div>
-
-      <div class="chart-container">
-        <h3>สิทธิ UC ตามจ่าย</h3>
-        <div class="chart-wrapper">
-          <canvas id="chart-income-uc-claim"></canvas>
-        </div>
-      </div>
-
-      <div class="chart-container">
-        <h3>รวมรายรับสิทธิข้าราชการ</h3>
-        <div class="chart-wrapper">
-          <canvas id="chart-income-gov"></canvas>
-        </div>
-      </div>
-
-      <div class="chart-container">
-        <h3>รวมรายรับสิทธิรัฐวิสาหกิจ</h3>
-        <div class="chart-wrapper">
-          <canvas id="chart-income-state"></canvas>
-        </div>
-      </div>
-
-      <div class="chart-container">
-        <h3>รวมรายรับสิทธิ อปท.</h3>
-        <div class="chart-wrapper">
-          <canvas id="chart-income-local"></canvas>
-        </div>
-      </div>
-
-      <div class="chart-container">
-        <h3>รวมรายรับชำระเงินเอง</h3>
-        <div class="chart-wrapper">
-          <canvas id="chart-income-self"></canvas>
-        </div>
-      </div>
-
-      <div class="chart-container">
-        <h3>รวมรายรับสิทธิ พรบ.</h3>
-        <div class="chart-wrapper">
-          <canvas id="chart-income-accident"></canvas>
-        </div>
-      </div>
-
-      <div class="chart-container">
-        <h3>รายรับอื่นๆ : ตรวจสุขภาพ/ต่างด้าว/อุดหนุน LP</h3>
-        <div class="chart-wrapper">
-          <canvas id="chart-income-other"></canvas>
-        </div>
-      </div>
-
-      <div class="chart-container">
-        <h3>รายรับจากเงิน CF</h3>
-        <div class="chart-wrapper">
-          <canvas id="chart-income-cf"></canvas>
-        </div>
-      </div>
-    </div>
-  `;
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <h3>รวมรายรับสิทธิ UC</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-income-uc"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>เงิน UC</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-income-uc-cash"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>สิทธิ UC ตามจ่าย</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-income-uc-claim"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รวมรายรับสิทธิข้าราชการ</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-income-gov"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รวมรายรับสิทธิรัฐวิสาหกิจ</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-income-state"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รวมรายรับสิทธิ อปท.</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-income-local"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รวมรายรับชำระเงินเอง</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-income-self"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รวมรายรับสิทธิ พรบ.</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-income-accident"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รายรับอื่นๆ : ตรวจสุขภาพ/ต่างด้าว/อุดหนุน LP</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-income-other"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>รายรับจากเงิน CF</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-income-cf"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
 
         setTimeout(() => {
-          const createChart =
-            chartType === "line" ? createLineChart : createBarChart;
-
-          createChart("chart-income-uc", incomeData.uc, "สิทธิ UC");
-          createChart("chart-income-uc-cash", incomeData.ucCash, "เงิน UC");
-          createChart(
+          createLineChart("chart-income-uc", incomeData.uc, "สิทธิ UC");
+          createLineChart("chart-income-uc-cash", incomeData.ucCash, "เงิน UC");
+          createLineChart(
             "chart-income-uc-claim",
             incomeData.ucClaim,
             "UC ตามจ่าย"
           );
-          createChart("chart-income-gov", incomeData.gov, "ข้าราชการ");
-          createChart("chart-income-state", incomeData.state, "รัฐวิสาหกิจ");
-          createChart("chart-income-local", incomeData.local, "อปท.");
-          createChart("chart-income-self", incomeData.self, "ชำระเงินเอง");
-          createChart("chart-income-accident", incomeData.accident, "พรบ.");
-          createChart(
+          createLineChart("chart-income-gov", incomeData.gov, "ข้าราชการ");
+          createLineChart(
+            "chart-income-state",
+            incomeData.state,
+            "รัฐวิสาหกิจ"
+          );
+          createLineChart("chart-income-local", incomeData.local, "อปท.");
+          createLineChart("chart-income-self", incomeData.self, "ชำระเงินเอง");
+          createLineChart("chart-income-accident", incomeData.accident, "พรบ.");
+          createLineChart(
             "chart-income-other",
             incomeData.other,
             "ตรวจสุขภาพ/ต่างด้าว/อุดหนุน LP"
           );
-          createChart("chart-income-cf", incomeData.cf, "CF");
+          createLineChart("chart-income-cf", incomeData.cf, "CF");
         }, 100);
       }
 
@@ -2774,7 +2738,7 @@
         const color = getChartColor(colorIndex);
 
         // Choose chart type based on year filter and user selection
-        const currentChartType = chartType;
+        const currentChartType = selectedYear === "all" ? chartType : "bar";
 
         const chartConfig = {
           type: currentChartType,
@@ -2900,7 +2864,6 @@
             },
             plugins: {
               legend: {
-                display: false,
                 labels: {
                   font: { family: "Prompt" },
                 },
@@ -2987,7 +2950,6 @@
             },
             plugins: {
               legend: {
-                display: false,
                 labels: {
                   font: { family: "Prompt" },
                 },
@@ -3068,7 +3030,6 @@
             },
             plugins: {
               legend: {
-                display: false,
                 labels: {
                   font: { family: "Prompt" },
                 },
@@ -3712,21 +3673,15 @@
 
       // Data filtering functions
       function filterDataByCategory(category) {
-        // ✅ ใช้ข้อมูลทั้งหมดก่อน
-        const filteredData = allData;
+        const filteredData = getFilteredData();
+        const filtered = filteredData.filter((d) => d.category === category);
 
-        // ✅ กรอง category + ปี (ถ้ามี)
-        const filtered = filteredData.filter(
-          (d) =>
-            d.category === category &&
-            (selectedYear === "all" || String(d.year) === String(selectedYear))
-        );
-
-        // ✅ ถ้าไม่มีข้อมูลจริง ๆ
+        // Return empty structure if no data
         if (filtered.length === 0) {
           return createEmptyDataStructure(category);
         }
 
+        // Process data based on category
         return processDataByCategory(filtered, category);
       }
 
@@ -4011,69 +3966,6 @@
         return months[month] || month;
       }
 
-      function getYearlyOverviewMonthlyData(year) {
-        const data = filterDataByCategory("yearly-overview");
-
-        const byMonth = (key) =>
-          data[key]
-            .filter((d) => Number(d.year) === Number(year) && d.month)
-            .sort((a, b) => Number(a.month) - Number(b.month));
-
-        return {
-          balance: byMonth("balance"),
-          payables: byMonth("payables"),
-          receivables: byMonth("receivables"),
-          net: byMonth("net"),
-          ratios: byMonth("ratios"),
-          workingCapital: byMonth("workingCapital"),
-          netIncome: byMonth("netIncome"),
-        };
-      }
-
-      function getYearlyIncomeData() {
-        const data = filterDataByCategory("yearly-income");
-
-        // 🔵 เลือกทุกปี → ใช้ข้อมูลรายปี (ไม่มี month)
-        if (selectedYear === "all") {
-          const byYear = (key) =>
-            data[key]
-              .filter((d) => !d.month)
-              .sort((a, b) => Number(a.year) - Number(b.year));
-
-          return {
-            uc: byYear("uc"),
-            ucCash: byYear("ucCash"),
-            ucClaim: byYear("ucClaim"),
-            gov: byYear("gov"),
-            state: byYear("state"),
-            local: byYear("local"),
-            self: byYear("self"),
-            accident: byYear("accident"),
-            other: byYear("other"),
-            cf: byYear("cf"),
-          };
-        }
-
-        // 🟢 เลือกปีเดียว → ใช้ข้อมูลรายเดือนของปีนั้น
-        const byMonth = (key) =>
-          data[key]
-            .filter((d) => Number(d.year) === Number(selectedYear) && d.month)
-            .sort((a, b) => Number(a.month) - Number(b.month));
-
-        return {
-          uc: byMonth("uc"),
-          ucCash: byMonth("ucCash"),
-          ucClaim: byMonth("ucClaim"),
-          gov: byMonth("gov"),
-          state: byMonth("state"),
-          local: byMonth("local"),
-          self: byMonth("self"),
-          accident: byMonth("accident"),
-          other: byMonth("other"),
-          cf: byMonth("cf"),
-        };
-      }
-
       // Initialize app
       initializeApp();
 
@@ -4082,88 +3974,6 @@
 
       // Initialize chart type toggle
       updateChartTypeToggle();
-
-      function updateYearFilterVisibility() {
-        const yearWrapper = document.getElementById("year-filter-wrapper");
-        if (!yearWrapper) return;
-
-        // ❌ ซ่อนเฉพาะหน้า "สถานการณ์การเงินปัจจุบัน"
-        if (currentSection === "current-overview") {
-          yearWrapper.style.display = "none";
-          selectedYear = "all"; // รีเซ็ตปี เพื่อไม่ให้มีผลค้าง
-        } else {
-          yearWrapper.style.display = "block";
-        }
-      }
-
-      function getOverviewData(category) {
-        const data = filterDataByCategory("yearly-overview")[category];
-
-        // 🟦 เลือกทุกปี → ใช้ข้อมูลรายปีเท่านั้น
-        if (selectedYear === "all") {
-          return data
-            .filter((d) => !d.month)
-            .sort((a, b) => Number(a.year) - Number(b.year));
-        }
-
-        // 🟩 เลือกปีเดียว → ใช้ข้อมูลรายเดือนของปีนั้น
-        return data
-          .filter((d) => Number(d.year) === Number(selectedYear) && d.month)
-          .sort((a, b) => Number(a.month) - Number(b.month));
-      }
-
-      function getYearlyOverviewData() {
-        const data = filterDataByCategory("yearly-overview");
-
-        // 🟦 เลือกทุกปี → ใช้ข้อมูลรายปี (ไม่มี month)
-        if (selectedYear === "all") {
-          const byYear = (key) =>
-            data[key]
-              .filter((d) => !d.month)
-              .sort((a, b) => Number(a.year) - Number(b.year));
-
-          return {
-            balance: byYear("balance"),
-            payables: byYear("payables"),
-            receivables: byYear("receivables"),
-            net: byYear("net"),
-            ratios: byYear("ratios"),
-            workingCapital: byYear("workingCapital"),
-            netIncome: byYear("netIncome"),
-          };
-        }
-
-        // 🟩 เลือกปีเดียว → ใช้ข้อมูลรายเดือนของปีนั้น
-        const byMonth = (key) =>
-          data[key]
-            .filter((d) => Number(d.year) === Number(selectedYear) && d.month)
-            .sort((a, b) => Number(a.month) - Number(b.month));
-
-        return {
-          balance: byMonth("balance"),
-          payables: byMonth("payables"),
-          receivables: byMonth("receivables"),
-          net: byMonth("net"),
-          ratios: byMonth("ratios"),
-          workingCapital: byMonth("workingCapital"),
-          netIncome: byMonth("netIncome"),
-        };
-      }
-
-      function sortByYearMonth(data) {
-        return data
-          .filter((d) => d.year && d.month)
-          .sort((a, b) => {
-            const aKey = Number(a.year) * 100 + Number(a.month);
-            const bKey = Number(b.year) * 100 + Number(b.month);
-            return aKey - bKey;
-          });
-      }
-
-      function getLast12Months(data) {
-        const sorted = sortByYearMonth(data);
-        return sorted.slice(-12);
-      }
     </script>
     <script>
       (function () {
